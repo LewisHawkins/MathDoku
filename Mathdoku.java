@@ -24,6 +24,7 @@ public class Mathdoku extends Application {
         VBox menu = new VBox(5);
 
         // Puzzle stuff
+        // 
 
         // Menu stuff
         // The menu contains buttons for the user to control the game
