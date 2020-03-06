@@ -1,2 +1,2 @@
 # MathDoku
-Coursework for COMP 1205
+Coursework for COMP 1206
