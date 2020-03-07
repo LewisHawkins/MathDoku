@@ -1,14 +1,22 @@
 import javafx.application.Application;
-
-import javafx.scene.Scene;
-import javafx.stage.Stage;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.GridPane;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Mathdoku extends Application {
-    public static void main(String[] args) {
+    private final int size = 6;
+    private Cell[][] cells = new Cell[size][size];
+
+    // Main method
+    public static void main (String[] args) {
         launch(args);
     }
 
@@ -21,10 +29,12 @@ public class Mathdoku extends Application {
 
         // On the left will be the grid for the actual mathdok puzzle, and the options will be on the right
         GridPane puzzle = new GridPane();
+        puzzle.setHgap(0);
+        puzzle.setVgap(0);
         VBox menu = new VBox(5);
 
         // Puzzle stuff
-        // 
+        this.createGrid(6, puzzle);
 
         // Menu stuff
         // The menu contains buttons for the user to control the game
@@ -39,9 +49,36 @@ public class Mathdoku extends Application {
         // Add the 2 large components to the master pane
         master.getChildren().addAll(puzzle, menu);
 
-        // Create a scene from the master pane and display it
-        stage.setScene(new Scene(master));
+        // Create a scene from the master pane, apply the CSS and display it
+        Scene scene = new Scene(master);
+        scene.getStylesheets().add(getClass().getResource("app.css").toExternalForm());
+        stage.setScene(scene);
         stage.show();
+    }
+
+    void createGrid (int size, GridPane p) {
+        for (int i = 0; i < size; i++) {
+            Cell[] newRow = new Cell[this.size];
+            for (int j = 0; j < size; j++) {
+                // Create the square of cells
+                Cell c = new Cell(j, i);
+                p.add(c.getBox(), j, i);
+                newRow[j] = c;
+            }
+            this.cells[i] = newRow;
+        }
+    }
+
+
+
+
+
+    void displayGrid (GridPane p) {
+        for (Cell[] cs : this.cells) {
+            for (Cell c : cs) {
+                System.out.println();
+            }
+        }
     }
 
 }
