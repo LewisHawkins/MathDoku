@@ -29,8 +29,10 @@ public class Mathdoku extends Application {
 
         // On the left will be the grid for the actual mathdok puzzle, and the options will be on the right
         GridPane puzzle = new GridPane();
-        puzzle.setHgap(0);
-        puzzle.setVgap(0);
+        //puzzle.setStyle("-fx-border-style: solid; -fx-border-width: 5px; -fx-border-color: black; -fx-background-color: #0000ff; -fx-background-fill: #0000ff; -fx-padding: 5;");
+        puzzle.setStyle("-fx-background-color: black; -fx-vgap: 2; -fx-hgap: 2 ; -fx-padding: 4;"); //padding goes around the whole grid, h/vgaps are inbetween cells
+        //puzzle.setHgap(5);
+        //puzzle.setVgap(5);
         VBox menu = new VBox(5);
 
         // Puzzle stuff
@@ -49,9 +51,9 @@ public class Mathdoku extends Application {
         // Add the 2 large components to the master pane
         master.getChildren().addAll(puzzle, menu);
 
-        // Create a scene from the master pane, apply the CSS and display it
+        // Create a scene from the master pane, apply the CSS (?) and display it
         Scene scene = new Scene(master);
-        scene.getStylesheets().add(getClass().getResource("app.css").toExternalForm());
+        //scene.getStylesheets().add(getClass().getResource("app.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
     }
