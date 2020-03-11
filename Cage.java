@@ -14,21 +14,38 @@ public class Cage {
         this.targetValue = target;
     }
 
-    public void doBorders () {
+    public void formatCage () {
         // Make the outside of the cage thicker so that it is visible to the user
         // Do this by assuming every cell has all 4 borders thick, then making neighbouring cells have thin borders
         // Set booleans for every cell in the cage
-        Iterator<Cell> cellIter = myCells.iterator();
-        while (cellIter.hasNext()) {
+        for (Cell c : this.myCells) {
             boolean[] t = {true, true, true, true};
-            cellIter.next().setAllCages(t);
+            c.setAllCages(t);
         }
         // Alter the booleans for neighbour cells
-
+        for (Cell a : this.myCells) {
+            for (Cell b : this.myCells) {
+                // Check every pair of cells in the cage to see if they neighbour
+                if (a.getRow() == b.getRow() && (a.getColumn() - b.getColumn()) == 1) {
+                    // If the cell b is above cell a remove the thick border between them
+                    a.setTopCage(false);
+                    b.setBottomCage(false);
+                }
+                if (a.getColumn() == b.getColumn() && (a.getRow() - b.getRow()) == 1) {
+                    // If the cell b is to the left of cell a remove the thick border between them
+                    a.setLeftCage(false);
+                    b.setRightCage(false);
+                }
+            }
+        }
         // Apply the changes to every cell
         for (Cell c : this.myCells) {
             c.dispCage();
         }
+
+        // Only the upper left most cell should contain the operation and target value
+        Cell topLeftCell = this.getTopLeftCell();
+        topLeftCell.setCageValue(" " + Integer.toString(this.targetValue) + this.operation);
     }
 
     // Check if the entered values in the cells can be used with the operation to reach the target value
@@ -80,6 +97,22 @@ public class Cage {
             }
         }
         return false;
+    }
+
+    public Cell getTopLeftCell () {
+        Cell topLeft = null;
+        for (Cell c : this.myCells) {
+            if (topLeft == null) {
+                topLeft = c;
+            }
+            // If the cell is more left and more up than the current 'topLeft' cell, replace it
+            if (c.getRow() <= topLeft.getRow()) {
+                if (c.getColumn() < topLeft.getColumn()) {
+                    topLeft = c;
+                }
+            }
+        }
+        return topLeft;
     }
 
     // Getters

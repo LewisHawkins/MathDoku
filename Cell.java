@@ -4,13 +4,11 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.geometry.Pos;
-/* LIST OF THINGS TO CHANGE:
-    - Make the whole window resize correctly, setHGrow and things
-    - Make the menu buttons look nicer (same size / logos)
-    -
 
- */
-public class Cell {
+import java.awt.*;
+import java.awt.event.*;
+
+public class Cell {// implements ActionListener {
     // A class for each of the cells that the user can input a number into
     //private GridPane container;
     private VBox box;
@@ -19,7 +17,7 @@ public class Cell {
     private int row;
     private int column;
     private HBox displayContainer;
-    private TextField display;
+    private Label display;
     private boolean leftCageOn;
     private boolean rightCageOn;
     private boolean topCageOn;
@@ -32,8 +30,10 @@ public class Cell {
         this.box.setPrefWidth(60);
         this.box.setPrefHeight(60);
 
-        this.cageValue = new Label(" x"); // Keep a space at the start so it looks nice
+        //
+        this.cageValue = new Label(" "); // Keep a space at the start so it looks nice
         this.cageValue.setPrefHeight(10);
+        //this.cageValue.addActionListener
 
         // The cell's co-ords
         this.row = row;
@@ -42,54 +42,53 @@ public class Cell {
 
         // The text box that the user will use to enter the number
         this.displayContainer = new HBox(0);
-        this.displayContainer.setPrefWidth(50);
-        this.display = new TextField();
-        this.display.setAlignment(Pos.TOP_CENTER);
+        this.displayContainer.setPrefWidth(60);
         this.displayContainer.setAlignment(Pos.TOP_CENTER);
-        this.display.setPrefWidth(5); // CENTRE ALIGN + MAKE SIZE EQUAL (RESTRICT SIZE OF STRING TO 1?) TO 1 CHARACTER
-        this.display.setStyle("-fx-border-style: solid; -fx-border-color: #ff0000"); // -fx-border-width: 10px; WTFFF
+
+        this.display = new Label("_");
+        this.display.setAlignment(Pos.TOP_CENTER);
+        this.display.setPrefWidth(52); // CENTRE ALIGN + MAKE SIZE EQUAL (RESTRICT SIZE OF STRING TO 1?) TO 1 CHARACTER
+        this.display.setPrefHeight(33);
+        this.display.setStyle("-fx-border-style: solid; -fx-border-color: #ffffff; -fx-font: 16 arial; -fx-font-weight: bold; -fx-text-box-border: transparent"); // -fx-border-width: 10px; WTFFF
+
         this.displayContainer.getChildren().add(this.display);
         this.box.getChildren().addAll(this.cageValue, this.displayContainer);
 
-        // The cage values
-        if (this.row == 1 && this.column == 1) {
-            this.leftCageOn = true;
-            this.rightCageOn = false;
-            this.topCageOn = true;
-            this.bottomCageOn = true;
-        } else if (this.row == 2 && this.column == 1) {
-            this.leftCageOn = false;
-            this.rightCageOn = true;
-            this.topCageOn = true;
-            this.bottomCageOn = true;
-        } else {
-            this.leftCageOn = false;
-            this.rightCageOn = false;
-            this.topCageOn = false;
-            this.bottomCageOn = false;
-        }
-        this.box.setStyle(this.dispCage());
-
+        this.dispCage();
     }
 
-    public String dispCage () {
+    public void dispCage () {
+        // Get the borders up to date
         String setCss = "-fx-background-color: #000000, #ffffff ; -fx-background-insets: 0,";
         for  (int i : this.getCurrentBorders()) {
             setCss += (" " + i);
         }
         setCss += ";";
-        //System.out.println(setCss);
-        return setCss;
-        //this.box.setStyle(setCss);
+        this.box.setStyle(setCss);
+        // Get the target label up to date
+
+        // Get the value up to date
     }
 
     // Getters
-    public TextField getDisplay () {
-        return this.display;
+    public int getValue () {
+        return this.value;
     }
 
-    public VBox getBox() {
+    public String getDisplay () {
+        return this.display.getText();
+    }
+
+    public VBox getBox () {
         return this.box;
+    }
+
+    public int getRow () {
+        return this.row;
+    }
+
+    public int getColumn () {
+        return this.column;
     }
 
     private int[] getCurrentBorders () {
@@ -110,19 +109,30 @@ public class Cell {
     }
 
     // Setters
-    public void setLeftCageOn(boolean leftCageOn) {
-        this.leftCageOn = leftCageOn;
+    public void setLeftCage (boolean b) {
+        this.leftCageOn = b;
     }
 
-    public void setRightCageOn(boolean rightCageOn) {
-        this.rightCageOn = rightCageOn;
+    public void setRightCage (boolean b) {
+        this.rightCageOn = b;
     }
 
-    public void setTopCageOn(boolean topCageOn) {
-        this.topCageOn = topCageOn;
+    public void setTopCage (boolean b) {
+        this.topCageOn = b;
     }
 
-    public void setBottomCageOn(boolean bottomCageOn) {
-        this.bottomCageOn = bottomCageOn;
+    public void setBottomCage (boolean b) {
+        this.bottomCageOn = b;
+    }
+
+    public void setAllCages (boolean[] borders) {
+        this.setLeftCage(borders[0]);
+        this.setRightCage(borders[1]);
+        this.setTopCage(borders[2]);
+        this.setBottomCage(borders[3]);
+    }
+
+    public void setCageValue(String newText) {
+        this.cageValue.setText(newText);
     }
 }
