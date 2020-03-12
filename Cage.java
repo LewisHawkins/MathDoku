@@ -115,6 +115,54 @@ public class Cage {
         return topLeft;
     }
 
+    public boolean areCellsAdjacent () {
+        // Create a copy of myCells
+        ArrayList<Cell> copy = new ArrayList<Cell>();
+        for (Cell c : this.myCells) {
+            copy.add(c);
+        }
+        ArrayList<Cell> cluster = new ArrayList<Cell>();
+        if (copy.size() > 0) {
+            cluster.add(copy.get(0));
+            copy.remove(0);
+        } else {
+            System.out.println("CAGE HAS 0 CELLS ERROR.");
+            return false; // Return false as an error has occured if a cage with 0
+        }
+        // Loop through the cells, add to 'cluster' if they neighbour any cells in the cluster
+        // Keep looping until either cells can't be added or no cells are added
+        boolean looping = true;
+        int loops = -1;
+        boolean passWithoutAdding;
+        while (looping) {
+            passWithoutAdding = true;
+            Iterator<Cell> copyIter = copy.iterator();
+            Cell checkIfNeighbours;
+            while (copyIter.hasNext()) {
+                checkIfNeighbours = copyIter.next();
+                for (Cell c : cluster) {
+                    // If any of the cells in cluster neighbour any of the cells in the copied list
+                    // add them to the cluster and remove from the copy
+                    if ((c.getColumn() - checkIfNeighbours.getColumn() == 1) || (c.getColumn() - checkIfNeighbours.getColumn() == -1) || (c.getRow() - checkIfNeighbours.getRow() == 1) || (c.getRow() - checkIfNeighbours.getRow() == -1)) {
+                        // Add to the cluster, remove from copy
+                        cluster.add(checkIfNeighbours);
+                        copyIter.remove();
+                        passWithoutAdding = false;
+                        break;
+                    }
+                }
+            }
+            // If the copy list is empty all of the cells have been added to the cluster, return true
+            if (copy.size() == 0) {
+                return true;
+            }
+            if (passWithoutAdding) {
+                looping = false;
+            }
+        }
+        return false;
+    }
+
     // Getters
     public String getOperation () {
         return this.operation;

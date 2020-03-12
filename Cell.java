@@ -45,7 +45,7 @@ public class Cell {// implements ActionListener {
         this.displayContainer.setPrefWidth(60);
         this.displayContainer.setAlignment(Pos.TOP_CENTER);
 
-        this.display = new Label("_");
+        this.display = new Label("");
         this.display.setAlignment(Pos.TOP_CENTER);
         this.display.setPrefWidth(52); // CENTRE ALIGN + MAKE SIZE EQUAL (RESTRICT SIZE OF STRING TO 1?) TO 1 CHARACTER
         this.display.setPrefHeight(33);

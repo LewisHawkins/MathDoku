@@ -32,7 +32,8 @@ LIST OF THINGS TO CHANGE:
     - Wrap the gridpane in a group or something so the black doesn't spread
     - Make the number bigger inside of the cell text box
     - Change operation variable in Cage class from string to char
-    -
+    - Redo the error detection for getCagesFromFile. The errorSum thing was nice but sometimes won't work by fluke number chance
+    - User needs to be able to enter the puzzle through appropriate text input control
  */
 
 public class Mathdoku extends Application {
@@ -134,13 +135,22 @@ public class Mathdoku extends Application {
         // Create the cages for the grid
         try {
             ArrayList<Cage> cages = this.getCagesFromFile("test.txt");
-            Iterator<Cage> cageIter = cages.iterator();
-            while (cageIter.hasNext()) {
-                Cage next = cageIter.next();
-                next.formatCage();
+            if (cages != null) {
+                Iterator<Cage> cageIter = cages.iterator();
+                while (cageIter.hasNext()) {
+                    Cage next = cageIter.next();
+                    next.formatCage();
+                }
+            } else {
+                // Do something error based here
+                Label error = new Label ("Error");
+                error.setStyle("-fx-background-color: #ff0000");
+                //error.setTextFill("#ff0000");
+                //p.setRowIndex(error, 2);
+                //p.setColumnIndex(error, 3);
+                p.add(error, 0, 0);
             }
         } catch (IOException e) {
-            System.out.println("REE 2");
             e.printStackTrace();
         }
     }
@@ -156,6 +166,9 @@ public class Mathdoku extends Application {
             InputStreamReader isr = new InputStreamReader(fis,"UTF-8");
             BufferedReader br = new BufferedReader(isr);
             String line;
+            // For error correction,the sum of all the cell numbers should equal to (1/2 * n * n+1) where n = total cells
+            int totalCells = this.size*this.size;
+            int errorSum = (totalCells * (totalCells+1))/2;
             while ((line = br.readLine()) != null) {
                 // Each line of the file represents a new cage, with the target info and cells split by the space
                 String[] lineContents = line.split(" ");
@@ -176,15 +189,42 @@ public class Mathdoku extends Application {
                     int cellCol = this.getColForCellNo(cellNo, this.size);
                     Cell cellInCage = this.cells[cellRow][cellCol];
                     cageCells.add(cellInCage);
+                    // Remove from the error
+                    errorSum -= cellNo;
                 }
                 Cage newCage = new Cage(cageCells, String.valueOf(op), targetInt);
-                allCages.add(newCage);
+
+                //
+                // Test that the cage is valid
+                //
+                if (newCage.areCellsAdjacent()) {
+                    //System.out.println("Cage added successfully.");
+                    allCages.add(newCage);
+                } else {
+                    System.out.println("Cage failed to load.");
+                }
+
             }
-            return allCages;
+            // After subtracting all of the cell numbers, the errorSum integer will be equal to 0 if each of the cell
+            // numbers from 1 to gridSize^2 appears each appears once and only once
+            if (errorSum == 0) {
+                return allCages;
+            } else {
+                return null;
+            }
+
         } catch (FileNotFoundException e) {
-            System.out.println("REE 1");
+            System.out.println("That file could not be found!");
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public void clearGrid () {
+        for (Cell[] cr : this.cells) {
+            for (Cell c : cr) {
+                c.setCageValue("");
+            }
         }
     }
 
