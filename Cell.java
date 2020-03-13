@@ -6,9 +6,13 @@ import javafx.scene.layout.HBox;
 import javafx.geometry.Pos;
 
 import java.awt.*;
-import java.awt.event.*;
+//import java.awt.event.*;
+import javafx.event.EventHandler;
+import javafx.scene.input.MouseEvent;
 
-public class Cell {// implements ActionListener {
+import java.util.Date;
+
+public class Cell {//implements ActionListener, WindowListener {
     // A class for each of the cells that the user can input a number into
     //private GridPane container;
     private VBox box;
@@ -16,8 +20,11 @@ public class Cell {// implements ActionListener {
     private int value;
     private int row;
     private int column;
-    private HBox displayContainer;
+    //private HBox displayContainer;
     private Label display;
+    private boolean selected;
+    private long selectedTime;
+
     private boolean leftCageOn;
     private boolean rightCageOn;
     private boolean topCageOn;
@@ -30,36 +37,78 @@ public class Cell {// implements ActionListener {
         this.box.setPrefWidth(60);
         this.box.setPrefHeight(60);
 
-        //
+        // The label for the cage's target
         this.cageValue = new Label(" "); // Keep a space at the start so it looks nice
         this.cageValue.setPrefHeight(10);
-        //this.cageValue.addActionListener
+        this.value = 0;
 
         // The cell's co-ords
         this.row = row;
         this.column = col;
-        this.value = 0;
 
         // The text box that the user will use to enter the number
-        this.displayContainer = new HBox(0);
-        this.displayContainer.setPrefWidth(60);
-        this.displayContainer.setAlignment(Pos.TOP_CENTER);
-
         this.display = new Label("");
         this.display.setAlignment(Pos.TOP_CENTER);
-        this.display.setPrefWidth(52); // CENTRE ALIGN + MAKE SIZE EQUAL (RESTRICT SIZE OF STRING TO 1?) TO 1 CHARACTER
-        this.display.setPrefHeight(33);
-        this.display.setStyle("-fx-border-style: solid; -fx-border-color: #ffffff; -fx-font: 16 arial; -fx-font-weight: bold; -fx-text-box-border: transparent"); // -fx-border-width: 10px; WTFFF
+        this.display.setPrefWidth(60);
+        this.display.setStyle(" -fx-font: 16 arial; -fx-font-weight: bold;");
+        //this.display.setStyle("-fx-border-style: solid; -fx-border-color: #ffffff; -fx-font: 16 arial; -fx-font-weight: bold; -fx-text-box-border: transparent"); // -fx-border-width: 10px; WTFFF
 
-        this.displayContainer.getChildren().add(this.display);
-        this.box.getChildren().addAll(this.cageValue, this.displayContainer);
+        // Add the functionality to interact with the user
+        this.selected = false;
+        this.selectedTime = 0;
+        // Add the reaction to the cell being clicked
+        this.box.setOnMouseClicked((new EventHandler<MouseEvent>() {
+            public void handle (MouseEvent e) {
+                //System.out.println("Cell call!");
+                Date d = new Date();
+                setSelectedTime(d.getTime());
+                setSelected(true);
+                //dispCage();
+            }
+        }));
 
+        // Put the components together
+        this.box.getChildren().addAll(this.cageValue, this.display);//Container);
+        // Display the cell
         this.dispCage();
     }
 
+    // Interaction
+    /*
+    public void actionPerformed(ActionEvent e) {
+        System.out.println("WOOO >>>");
+        //text.setText("Button Clicked " + numClicks + " times");
+    }
+    public void windowClosing(WindowEvent e) {
+        System.exit(0);
+    }
+    public void windowOpened(WindowEvent e) {}
+    public void windowActivated(WindowEvent e) {}
+    public void windowIconified(WindowEvent e) {}
+    public void windowDeiconified(WindowEvent e) {}
+    public void windowDeactivated(WindowEvent e) {}
+    public void windowClosed(WindowEvent e) {}
+
+     */
+
+
     public void dispCage () {
         // Get the borders up to date
-        String setCss = "-fx-background-color: #000000, #ffffff ; -fx-background-insets: 0,";
+        String setCss;
+        if (this.selected) {
+            //System.out.println("SET ME BLUE");
+            setCss = "-fx-background-color: #000000, #29b6f6; -fx-background-insets: 0,";
+        } else {
+            //System.out.println("SET ME WHITE");
+            setCss = "-fx-background-color: #000000, #ffffff; -fx-background-insets: 0,";
+        }
+        /*
+        else {
+            String setCss = "-fx-background-color: #000000, #00ff00; -fx-background-insets: 0,"; FOR WHEN A CELL IS CORRECT
+        } else {
+            String setCss = "-fx-background-color: #000000, #ffbbaa; -fx-background-insets: 0,"; FOR WHEN A CELL IS INCORRECT
+        }
+         */
         for  (int i : this.getCurrentBorders()) {
             setCss += (" " + i);
         }
@@ -89,6 +138,14 @@ public class Cell {// implements ActionListener {
 
     public int getColumn () {
         return this.column;
+    }
+
+    public long getSelectedTime () {
+        return this.selectedTime;
+    }
+
+    public boolean isSelected () {
+        return this.selected;
     }
 
     private int[] getCurrentBorders () {
@@ -132,7 +189,15 @@ public class Cell {// implements ActionListener {
         this.setBottomCage(borders[3]);
     }
 
-    public void setCageValue(String newText) {
+    public void setCageValue (String newText) {
         this.cageValue.setText(newText);
+    }
+
+    public void setSelected (Boolean b) {
+        this.selected = b;
+    }
+
+    public void setSelectedTime (long d) {
+        this.selectedTime = d;
     }
 }

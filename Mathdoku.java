@@ -6,6 +6,8 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
@@ -15,6 +17,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+
+import javafx.event.EventHandler;
 
 import java.io.File;
 import java.io.FileReader;
@@ -34,6 +38,7 @@ LIST OF THINGS TO CHANGE:
     - Change operation variable in Cage class from string to char
     - Redo the error detection for getCagesFromFile. The errorSum thing was nice but sometimes won't work by fluke number chance
     - User needs to be able to enter the puzzle through appropriate text input control
+    - See what happens when trying to input a number at the start before clicking on a cell for the first time
  */
 
 public class Mathdoku extends Application {
@@ -115,11 +120,26 @@ public class Mathdoku extends Application {
 
         // Create a scene from the master pane, apply the CSS (?) and display it
         Scene scene = new Scene(master);
+
+        // Apply the keyboard interaction handling
+        scene.setOnKeyPressed(new EventHandler<KeyEvent>(){
+            public void handle(KeyEvent event) {
+                System.out.println("KEY PRESSED: " + event.getCode());
+            }
+        });
+        scene.setOnMouseClicked((new EventHandler<MouseEvent>() {
+            public void handle (MouseEvent e) {
+                //System.out.println("Math call!");
+                setSelectedCell(getMostRecentSelected());
+            }
+        }));
+
         //scene.getStylesheets().add(getClass().getResource("app.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
     }
 
+    // Grid/Cage setup
     void createGrid (int size, GridPane p)  {
         // Create the cells for the grid
         for (int i = 0; i < size; i++) {
@@ -220,14 +240,61 @@ public class Mathdoku extends Application {
         }
     }
 
+
+    // Puzzle
     public void clearGrid () {
         for (Cell[] cr : this.cells) {
             for (Cell c : cr) {
                 c.setCageValue("");
+                // This should either manually set the actual cage value
+                // or setCageValue will change the value in the cell class
             }
         }
     }
 
+
+    // Interaction/Handling
+    public void getKeyPressed(String keyCode, int gridSize) {
+        // SWITCH STATEMENT?
+    }
+
+    public Cell getMostRecentSelected () {
+        if (this.selectedCell == null) {
+            // When first loading select the top left cell by default
+            this.selectedCell = this.cells[0][0];
+        }
+        for (Cell[] cr : this.cells) {
+            for (Cell c : cr) {
+                if (c.isSelected()) {
+                    // Compare with the currently selected, if more recently selected then swap them
+                    if (c.getSelectedTime() > this.selectedCell.getSelectedTime()) {
+                        this.selectedCell.setSelected(false);
+                        this.selectedCell.dispCage();
+                        this.selectedCell = c;
+                        this.selectedCell.dispCage();
+                    }
+                }
+            }
+        }
+        return this.selectedCell;
+    }
+
+    /*
+    public void actionPerformed(ActionEvent e) {
+        System.out.println("WOO !!!");
+        //text.setText("Button Clicked " + numClicks + " times");
+    }
+
+    // Overwrites to get working
+    public void windowOpened(WindowEvent e) {}
+    public void windowActivated(WindowEvent e) {}
+    public void windowIconified(WindowEvent e) {}
+    public void windowDeiconified(WindowEvent e) {}
+    public void windowDeactivated(WindowEvent e) {}
+    public void windowClosed(WindowEvent e) {}
+    */
+
+    // Getters
     int getRowForCellNo (int cellNo, int gridSize) {
         return ((cellNo - 1) / gridSize);
     }
@@ -236,12 +303,10 @@ public class Mathdoku extends Application {
         return ((cellNo - 1) % gridSize);
     }
 
-    void displayGrid (GridPane p) {
-        for (Cell[] cs : this.cells) {
-            for (Cell c : cs) {
-                System.out.println();
-            }
-        }
+    // Setters
+    public void setSelectedCell (Cell c) {
+        this.selectedCell = c;
     }
+
 
 }
