@@ -6,12 +6,14 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Stack;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -30,7 +32,7 @@ import java.io.IOException;
 
 /*
 LIST OF THINGS TO CHANGE:
-    - Make the whole window resize correctly, setHGrow and things
+    - Mgake the whole window resize correctly, setHGrow and things
     - Make the menu buttons look nicer (same size / logos)
     -
     - Wrap the gridpane in a group or something so the black doesn't spread
@@ -38,14 +40,23 @@ LIST OF THINGS TO CHANGE:
     - Change operation variable in Cage class from string to char
     - Redo the error detection for getCagesFromFile. The errorSum thing was nice but sometimes won't work by fluke number chance
     - User needs to be able to enter the puzzle through appropriate text input control
-    - See what happens when trying to input a number at the start before clicking on a cell for the first time
+    - See what happens when tryin to input a number at the start before clicking on a cell for the first time
+    - Attempting to select the top left cell at the start of the game doesn't work --> default value?
+    - Ensure that the stack size always remains at 10 [no fancy overrides or sub/super classes] just make sure every 'push' is paired with an if size >10 ... remove[0]
  */
 
 public class Mathdoku extends Application {
+    // The size (height/width) of the play grid
     private final int size = 6;
+    // Nested array of the size^squared cell objects
     private Cell[][] cells = new Cell[size][size];
+    // A list of all the cages that group the cells
     private Cage[] cages = new Cage[2];
+    // The cell currently selected by the user so that they can highlight cells to enter information
     private Cell selectedCell;
+    // A stack of (10) actions from the user to enable the undo/redo buttons
+    Stack<Action> actionStack = new Stack<Action>();
+
 
     // Main method
     public static void main (String[] args) {
@@ -73,6 +84,14 @@ public class Mathdoku extends Application {
         // Menu stuff
         // The menu contains buttons for the user to control the game
         Button undo = new Button("Undo");
+        undo.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Get the Action on the top of the stack, and call the undo action on it
+                Action mostRecentAction = actionStack.peek();
+                mostRecentAction.undo();
+                // The undo action itself is an action so add it to the stack
+            }
+        });
         Button redo = new Button("Redo");
         Button clear = new Button("Clear");
         Button loadFile = new Button("Load game from file");
@@ -92,13 +111,86 @@ public class Mathdoku extends Application {
         Button keyC = new Button("C");
         Button key0 = new Button("0");
         Button keyX = new Button("X");
-        /*
-        key1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.out.println(">>");
+
+        // Add the interaction to the buttons so that the buttons can be used
+        key1.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(1);
             }
         });
-         */
+        key2.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(2);
+            }
+        });
+        key3.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(3);
+            }
+        });
+        key4.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(4);
+            }
+        });
+        key5.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(5);
+            }
+        });
+        key6.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(6);
+            }
+        });
+        key7.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(7);
+            }
+        });
+        key8.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(8);
+            }
+        });
+        key9.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(9);
+            }
+        });
+        key0.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Insert the number into the highlighted cell
+                keypadNumberPress(0);
+            }
+        });
+        keyC.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // When the clear button is pressed on the keypad, the highlighted cell should be cleared
+                Cell cellToChange = getMostRecentSelected();
+                // Create a new Action object and add it to the stack
+                Action update = new Action(cellToChange, cellToChange.getDisplay(), "");
+                cellToChange.setDisplay(0);
+                actionStack.push(update);
+                System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
+                // Check the stack size always remains at 10
+                if (actionStack.size() > 10) {
+                    // Take out the oldest element in the stack so that the size always has a maximum of 10
+                    actionStack.remove(0);
+                }
+            }
+        });
+
+        // Add all the buttons to the GUI
         keypad.add(key1, 0, 0);
         keypad.add(key2, 1, 0);
         keypad.add(key3, 2, 0);
@@ -112,7 +204,6 @@ public class Mathdoku extends Application {
         keypad.add(key0, 0, 3);
         keypad.add(keyX, 2, 3);
 
-
         menu.getChildren().addAll(undo, redo, clear, loadFile, loadText, showMistakes, keypad);
 
         // Add the 2 large components to the master pane
@@ -121,12 +212,27 @@ public class Mathdoku extends Application {
         // Create a scene from the master pane, apply the CSS (?) and display it
         Scene scene = new Scene(master);
 
-        // Apply the keyboard interaction handling
+        // Apply the keyboard/mouse  interaction handling
         scene.setOnKeyPressed(new EventHandler<KeyEvent>(){
             public void handle(KeyEvent event) {
-                System.out.println("KEY PRESSED: " + event.getCode());
+                int newCellNumber = 0;
+                KeyCode keyPressed = event.getCode();
+                // Get the key that was pressed, call a function to ensure that it's a valid number key and display it
+                newCellNumber = validateKeyPress(keyPressed);
+                Cell cellToChange = getMostRecentSelected();
+                // Create a new Action object and add it to the stack
+                Action update = new Action(cellToChange, cellToChange.getDisplay(), Integer.toString(newCellNumber));
+                cellToChange.setDisplay(newCellNumber);
+                actionStack.push(update);
+                System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
+                // Check the stack size always remains at 10
+                if (actionStack.size() == 10) {
+                    // Take out the oldest element in the stack so that the size always has a maximum of 10
+                    actionStack.remove(0);
+                }
             }
         });
+
         scene.setOnMouseClicked((new EventHandler<MouseEvent>() {
             public void handle (MouseEvent e) {
                 //System.out.println("Math call!");
@@ -254,8 +360,67 @@ public class Mathdoku extends Application {
 
 
     // Interaction/Handling
-    public void getKeyPressed(String keyCode, int gridSize) {
-        // SWITCH STATEMENT?
+    public int validateKeyPress(KeyCode keyCode) {
+        int newNumber = 0;
+        // 8 Case statements needed as the largest size that the board can be is 8 by 8
+        switch (keyCode) {
+            case DIGIT1:
+                newNumber = 1;
+                break;
+            case DIGIT2:
+                newNumber = 2;
+                break;
+            case DIGIT3:
+                newNumber = 3;
+                break;
+            case DIGIT4:
+                newNumber = 4;
+                break;
+            case DIGIT5:
+                newNumber = 5;
+                break;
+            case DIGIT6:
+                newNumber = 6;
+                break;
+            case DIGIT7:
+                newNumber = 7;
+                break;
+            case DIGIT8:
+                newNumber = 8;
+                break;
+            default:
+                // If any invalid key is pressed the value 0 should be returned to indiciate this
+                newNumber = 0;
+        }
+        // You can't enter a number into a cell if it is bigger than the grid size
+        if (newNumber > this.size) {
+            newNumber = 0;
+        }
+        return newNumber;
+    }
+
+    // Is this actually used anywhere???
+    public void testFunc () {
+        System.out.println("REEE");
+    }
+
+    public void keypadNumberPress (int num) {
+        if (num > this.size) {
+            // An irrelevant number has been pressed, so don't do anything (pop up an alert?)
+            System.out.println("Too large pressed.");
+        } else {
+            Cell cellToChange = getMostRecentSelected();
+            // Create a new Action object and add it to the stack
+            Action update = new Action(cellToChange, cellToChange.getDisplay(), Integer.toString(num));
+            cellToChange.setDisplay(num);
+            actionStack.push(update);
+            System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
+            // Check the stack size always remains at 10
+            if (actionStack.size() > 10) {
+                // Take out the oldest element in the stack so that the size always has a maximum of 10
+                actionStack.remove(0);
+            }
+        }
     }
 
     public Cell getMostRecentSelected () {

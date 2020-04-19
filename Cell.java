@@ -189,6 +189,14 @@ public class Cell {//implements ActionListener, WindowListener {
         this.setBottomCage(borders[3]);
     }
 
+    public void setDisplay (int newNum) {
+        if (newNum == 0) {
+            this.display.setText("");
+        } else {
+            this.display.setText(Integer.toString(newNum));
+        }
+    }
+
     public void setCageValue (String newText) {
         this.cageValue.setText(newText);
     }
