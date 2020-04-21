@@ -20,12 +20,18 @@ public class Action {
 
     // Undo the action. This method returns an Action as calling undo is itself performing an action
     public void undo () {
-        this.affectedCell.setCageValue(this.valueBefore);
-        return new Action(affectedCell, )
+        System.out.println("An undo has occured.");
+        this.affectedCell.setDisplay(Integer.parseInt(this.valueBefore));
+        // return new Action(affectedCell, )
     }
 
-    // Redo the action
+    // Redo the action. This is esssentially the same as performing the action again
     public void redo () {
-        this.affectedCell.setCageValue(this.valueAfter);
+        System.out.println("A redo has occured.");
+        if (this.valueAfter == "") {
+            this.affectedCell.setDisplay(0);
+        } else {
+            this.affectedCell.setDisplay(Integer.parseInt(this.valueAfter));
+        }
     }
 }

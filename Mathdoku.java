@@ -43,6 +43,7 @@ LIST OF THINGS TO CHANGE:
     - See what happens when tryin to input a number at the start before clicking on a cell for the first time
     - Attempting to select the top left cell at the start of the game doesn't work --> default value?
     - Ensure that the stack size always remains at 10 [no fancy overrides or sub/super classes] just make sure every 'push' is paired with an if size >10 ... remove[0]
+    - Change the name of the member variables for the undo/redo stacks to be more consistent
  */
 
 public class Mathdoku extends Application {
@@ -54,9 +55,9 @@ public class Mathdoku extends Application {
     private Cage[] cages = new Cage[2];
     // The cell currently selected by the user so that they can highlight cells to enter information
     private Cell selectedCell;
-    // A stack of (10) actions from the user to enable the undo/redo buttons
+    // Stacks of (10) actions from the user to enable the undo/redo buttons
     Stack<Action> actionStack = new Stack<Action>();
-
+    Stack<Action> redoStack = new Stack<Action>();
 
     // Main method
     public static void main (String[] args) {
@@ -84,14 +85,6 @@ public class Mathdoku extends Application {
         // Menu stuff
         // The menu contains buttons for the user to control the game
         Button undo = new Button("Undo");
-        undo.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
-            public void handle(MouseEvent event) {
-                // Get the Action on the top of the stack, and call the undo action on it
-                Action mostRecentAction = actionStack.peek();
-                mostRecentAction.undo();
-                // The undo action itself is an action so add it to the stack
-            }
-        });
         Button redo = new Button("Redo");
         Button clear = new Button("Clear");
         Button loadFile = new Button("Load game from file");
@@ -112,65 +105,138 @@ public class Mathdoku extends Application {
         Button key0 = new Button("0");
         Button keyX = new Button("X");
 
+        // Inner classes to help the stack interaction
+        class UndoHandler {
+            public UndoHandler (Stack stackToCheck) {
+                // Whenever an undo action is made, check if the button needs to be disabled
+                if (stackToCheck.size() == 0) {
+                    // Disable the undo button when the stack of actions is empty
+                    undo.setDisable(true);
+                } else {
+                    undo.setDisable(false);
+                }
+            }
+        }
+        class RedoHandler {
+            public RedoHandler (Stack stackToCheck) {
+                System.out.println("WORKING");
+                // Whenever a redo action is made, check if the button needs to be disabled
+                if (stackToCheck.size() == 0) {
+                    // Disable the undo button when the stack of actions is empty
+                    redo.setDisable(true);
+                } else {
+                    redo.setDisable(false);
+                }
+            }
+        }
+
+        undo.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Get the Action on the top of the stack, call the undo action on it and then remove it
+                Action mostRecentAction = actionStack.peek();
+                mostRecentAction.undo();
+                actionStack.pop();
+                // The undo action is then added to the redo stack
+                redoStack.push(mostRecentAction);
+                // Disable/Enable the buttons if necessary
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
+                System.out.println("The undo stack now looks like:" + actionStack);
+            }
+        });
+        redo.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Get the Action on the top of the stack, and redo it
+                Action mostRecentAction = redoStack.peek();
+                mostRecentAction.redo();
+                redoStack.pop();
+                // The redone action is then added back to the undo stack
+                actionStack.push(mostRecentAction);
+                // Disable/Enable the buttons if necessary
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
+                System.out.println("The undo stack now looks like:" + actionStack);
+            }
+        });
         // Add the interaction to the buttons so that the buttons can be used
         key1.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(1);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key2.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(2);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key3.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(3);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key4.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(4);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key5.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(5);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key6.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(6);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key7.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(7);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key8.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(8);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key9.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(9);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         key0.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(0);
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
         keyC.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -183,7 +249,7 @@ public class Mathdoku extends Application {
                 actionStack.push(update);
                 System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
                 // Check the stack size always remains at 10
-                if (actionStack.size() > 10) {
+                if (actionStack.size() >= 10) {
                     // Take out the oldest element in the stack so that the size always has a maximum of 10
                     actionStack.remove(0);
                 }
@@ -226,19 +292,26 @@ public class Mathdoku extends Application {
                 actionStack.push(update);
                 System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
                 // Check the stack size always remains at 10
-                if (actionStack.size() == 10) {
+                if (actionStack.size() >= 10) {
                     // Take out the oldest element in the stack so that the size always has a maximum of 10
                     actionStack.remove(0);
                 }
+                // See if the buttons should be disabled
+                UndoHandler u = new UndoHandler(actionStack);
+                RedoHandler r = new RedoHandler(redoStack);
             }
         });
 
         scene.setOnMouseClicked((new EventHandler<MouseEvent>() {
             public void handle (MouseEvent e) {
-                //System.out.println("Math call!");
+                // Highlight the cell that the user clicked on so that they know they have selected it
                 setSelectedCell(getMostRecentSelected());
             }
         }));
+
+        // Initially check if the buttons should be disabled
+        UndoHandler u = new UndoHandler(actionStack);
+        RedoHandler r = new RedoHandler(redoStack);
 
         //scene.getStylesheets().add(getClass().getResource("app.css").toExternalForm());
         stage.setScene(scene);
@@ -416,10 +489,11 @@ public class Mathdoku extends Application {
             actionStack.push(update);
             System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
             // Check the stack size always remains at 10
-            if (actionStack.size() > 10) {
+            if (actionStack.size() >= 10) {
                 // Take out the oldest element in the stack so that the size always has a maximum of 10
                 actionStack.remove(0);
             }
+            // checkButtonDisability(this.actionStack, )
         }
     }
 
@@ -442,6 +516,15 @@ public class Mathdoku extends Application {
             }
         }
         return this.selectedCell;
+    }
+
+    public void checkButtonDisability (Button b, Stack s) {
+        // Check the size of the stack of actions to know wether the undo button should be disabled or not
+        if (s.size() == 0) {
+            b.setDisable(true);
+        } else {
+            b.setDisable(false);
+        }
     }
 
     /*
