@@ -1,5 +1,8 @@
 import javafx.application.Application;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.*;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -119,7 +122,6 @@ public class Mathdoku extends Application {
         }
         class RedoHandler {
             public RedoHandler (Stack stackToCheck) {
-                System.out.println("WORKING");
                 // Whenever a redo action is made, check if the button needs to be disabled
                 if (stackToCheck.size() == 0) {
                     // Disable the undo button when the stack of actions is empty
@@ -129,7 +131,7 @@ public class Mathdoku extends Application {
                 }
             }
         }
-
+        // Add functionality to the undo button
         undo.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Get the Action on the top of the stack, call the undo action on it and then remove it
@@ -141,9 +143,10 @@ public class Mathdoku extends Application {
                 // Disable/Enable the buttons if necessary
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
-                System.out.println("The undo stack now looks like:" + actionStack);
+                //System.out.println("The undo stack now looks like:" + actionStack);
             }
         });
+        // Add functionality to the redo button
         redo.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Get the Action on the top of the stack, and redo it
@@ -156,6 +159,32 @@ public class Mathdoku extends Application {
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
                 System.out.println("The undo stack now looks like:" + actionStack);
+            }
+        });
+        // Add functionality to the 'clear board' button
+        clear.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Create a dialog box that appears to the user asking them to confirm the action
+                Alert alert = new Alert(AlertType.CONFIRMATION);
+                alert.setTitle("Confirm");
+                alert.setHeaderText("Are you sure you want to clear the board?");
+                alert.showAndWait().ifPresent(choice -> {
+                    if (choice == ButtonType.OK) {
+                        // Clear all cells in the board
+                        for (Cell[] c : cells) {
+                            for (Cell cellToClear : c) {
+                                cellToClear.setDisplay(0);
+                            }
+                        }
+                        // Clearing the board should also reset both stacks of actions taken by the user
+                        actionStack.clear();
+                        redoStack.clear();
+                        UndoHandler u = new UndoHandler(actionStack);
+                        RedoHandler r = new RedoHandler(redoStack);
+                    } else if (choice == ButtonType.CANCEL) {
+                        System.out.println("Pressed cancel.");
+                    }
+                });
             }
         });
         // Add the interaction to the buttons so that the buttons can be used
@@ -275,10 +304,10 @@ public class Mathdoku extends Application {
         // Add the 2 large components to the master pane
         master.getChildren().addAll(puzzle, menu);
 
-        // Create a scene from the master pane, apply the CSS (?) and display it
+        // Create a scene from the master pane
         Scene scene = new Scene(master);
 
-        // Apply the keyboard/mouse  interaction handling
+        // Apply the keyboard/mouse interaction handling
         scene.setOnKeyPressed(new EventHandler<KeyEvent>(){
             public void handle(KeyEvent event) {
                 int newCellNumber = 0;
