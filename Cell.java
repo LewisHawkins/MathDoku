@@ -25,6 +25,9 @@ public class Cell {//implements ActionListener, WindowListener {
     private boolean selected;
     private long selectedTime;
 
+    private boolean correct;
+    private boolean showingMistakes;
+
     private boolean leftCageOn;
     private boolean rightCageOn;
     private boolean topCageOn;
@@ -56,6 +59,11 @@ public class Cell {//implements ActionListener, WindowListener {
         // Add the functionality to interact with the user
         this.selected = false;
         this.selectedTime = 0;
+
+        // Store the user's completion of the puzzle
+        this.correct = false;
+        this.showingMistakes = false;
+
         // Add the reaction to the cell being clicked
         this.box.setOnMouseClicked((new EventHandler<MouseEvent>() {
             public void handle (MouseEvent e) {
@@ -99,16 +107,25 @@ public class Cell {//implements ActionListener, WindowListener {
             //System.out.println("SET ME BLUE");
             setCss = "-fx-background-color: #000000, #29b6f6; -fx-background-insets: 0,";
         } else {
-            //System.out.println("SET ME WHITE");
-            setCss = "-fx-background-color: #000000, #ffffff; -fx-background-insets: 0,";
+            // Only show mistakes on non-empty cells
+            if (this.display.getText() != "") {
+                if (this.showingMistakes) {
+                    if (this.correct) {
+                        // Set the cell green [not really necessary? --> The button just says show mistakes]
+                        setCss = "-fx-background-color: #000000, #00ff00; -fx-background-insets: 0,";
+                    } else {
+                        // Set the cell red
+                        setCss = "-fx-background-color: #000000, #ffbbaa; -fx-background-insets: 0,";
+                    }
+                } else {
+                    // If not showing mistakes then the cell should be white
+                    setCss = "-fx-background-color: #000000, #ffffff; -fx-background-insets: 0,";
+                }
+            } else {
+                // Empty cells should be white
+                setCss = "-fx-background-color: #000000, #ffffff; -fx-background-insets: 0,";
+            }
         }
-        /*
-        else {
-            String setCss = "-fx-background-color: #000000, #00ff00; -fx-background-insets: 0,"; FOR WHEN A CELL IS CORRECT
-        } else {
-            String setCss = "-fx-background-color: #000000, #ffbbaa; -fx-background-insets: 0,"; FOR WHEN A CELL IS INCORRECT
-        }
-         */
         for  (int i : this.getCurrentBorders()) {
             setCss += (" " + i);
         }
@@ -208,4 +225,12 @@ public class Cell {//implements ActionListener, WindowListener {
     public void setSelectedTime (long d) {
         this.selectedTime = d;
     }
+
+    public void setShowingMistakes (boolean b) {
+        this.showingMistakes = b;
+    }
+
+    public void setCorrect (boolean b) {
+        this.correct = b;
+    };
 }

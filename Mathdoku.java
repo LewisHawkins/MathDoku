@@ -5,6 +5,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -45,8 +46,9 @@ LIST OF THINGS TO CHANGE:
     - User needs to be able to enter the puzzle through appropriate text input control
     - See what happens when tryin to input a number at the start before clicking on a cell for the first time
     - Attempting to select the top left cell at the start of the game doesn't work --> default value?
-    - Ensure that the stack size always remains at 10 [no fancy overrides or sub/super classes] just make sure every 'push' is paired with an if size >10 ... remove[0]
     - Change the name of the member variables for the undo/redo stacks to be more consistent
+    - Ensure checkWin is being called every time the user selects a new cell, so that the user can't de-red each of the X cells by colouring them all [blue then white] by clicking on them all
+    - THE ABOVE LIVE/BULLETPOINT IS TRUE FOR UNDOING ACTIONS AS WELL. ENTER NUMEBER --> HIGHLIGHT IT RED/WRONG --> UNDO == empty cell still red
  */
 
 public class Mathdoku extends Application {
@@ -92,7 +94,7 @@ public class Mathdoku extends Application {
         Button clear = new Button("Clear");
         Button loadFile = new Button("Load game from file");
         Button loadText = new Button("Load game from text");
-        Button showMistakes = new Button("Show mistakes");
+        ToggleButton showMistakes = new ToggleButton("Show mistakes");
         // The menu also contains a keypad so the user can enter numerical input without a keyboard
         GridPane keypad = new GridPane();
         Button key1 = new Button("1");
@@ -144,6 +146,7 @@ public class Mathdoku extends Application {
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
                 //System.out.println("The undo stack now looks like:" + actionStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         // Add functionality to the redo button
@@ -158,7 +161,8 @@ public class Mathdoku extends Application {
                 // Disable/Enable the buttons if necessary
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
-                System.out.println("The undo stack now looks like:" + actionStack);
+                //System.out.println("The undo stack now looks like:" + actionStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         // Add functionality to the 'clear board' button
@@ -185,15 +189,39 @@ public class Mathdoku extends Application {
                         System.out.println("Pressed cancel.");
                     }
                 });
+                checkGameWin(showMistakes.isSelected());
             }
         });
-        // Add the interaction to the buttons so that the buttons can be used
+        // Add functionality to the two load buttons
+
+
+        // Add functionality to the button to show mistakes
+        /*
+        showMistakes.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // This will turn on and off the shown mistakes when this button is both turned on and off
+                //checkGameWin(showMistakes.isSelected());
+            }
+        });
+
+         */
+        showMistakes.setOnMousePressed(new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // This occurs before the button's state changes, so call the check win function with the opposite
+                //Boolean reverse = !
+                checkGameWin(!showMistakes.isSelected());
+                //System.out.println("SET ON MOUSE PRESSED: Initially called as showing mistakes: " + showMistakes.isSelected());
+                //System.out.println("FIHAIFUIAS IUADI");
+            }
+        });
+        // Add the interaction to the keypad buttons so that they can be used
         key1.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // Insert the number into the highlighted cell
                 keypadNumberPress(1);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key2.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -202,6 +230,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(2);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key3.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -210,6 +239,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(3);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key4.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -218,6 +248,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(4);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key5.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -226,6 +257,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(5);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key6.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -234,6 +266,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(6);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key7.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -242,6 +275,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(7);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key8.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -250,6 +284,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(8);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key9.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -258,6 +293,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(9);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         key0.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -266,6 +302,7 @@ public class Mathdoku extends Application {
                 keypadNumberPress(0);
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
         keyC.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
@@ -276,12 +313,13 @@ public class Mathdoku extends Application {
                 Action update = new Action(cellToChange, cellToChange.getDisplay(), "");
                 cellToChange.setDisplay(0);
                 actionStack.push(update);
-                System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
+                //System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
                 // Check the stack size always remains at 10
                 if (actionStack.size() >= 10) {
                     // Take out the oldest element in the stack so that the size always has a maximum of 10
                     actionStack.remove(0);
                 }
+                checkGameWin(showMistakes.isSelected());
             }
         });
 
@@ -319,7 +357,7 @@ public class Mathdoku extends Application {
                 Action update = new Action(cellToChange, cellToChange.getDisplay(), Integer.toString(newCellNumber));
                 cellToChange.setDisplay(newCellNumber);
                 actionStack.push(update);
-                System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
+                //System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
                 // Check the stack size always remains at 10
                 if (actionStack.size() >= 10) {
                     // Take out the oldest element in the stack so that the size always has a maximum of 10
@@ -328,6 +366,7 @@ public class Mathdoku extends Application {
                 // See if the buttons should be disabled
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
+                checkGameWin(showMistakes.isSelected());
             }
         });
 
@@ -335,6 +374,7 @@ public class Mathdoku extends Application {
             public void handle (MouseEvent e) {
                 // Highlight the cell that the user clicked on so that they know they have selected it
                 setSelectedCell(getMostRecentSelected());
+                checkGameWin(showMistakes.isSelected());
             }
         }));
 
@@ -448,7 +488,6 @@ public class Mathdoku extends Application {
         }
     }
 
-
     // Puzzle
     public void clearGrid () {
         for (Cell[] cr : this.cells) {
@@ -456,6 +495,60 @@ public class Mathdoku extends Application {
                 c.setCageValue("");
                 // This should either manually set the actual cage value
                 // or setCageValue will change the value in the cell class
+            }
+        }
+    }
+    // This should return an arraylist, as the size is not fixed
+    public ArrayList<Cell> getMistakes () {
+        // Start with a list of all the non empty cells, and assume they're all correct
+
+
+
+        // Check the 3 puzzle constraints
+        ArrayList<Cell> allMistakes = new ArrayList<Cell>();
+        // Check each row
+
+        // Check each column
+
+        // Check each of the cages
+        return allMistakes;
+    }
+
+    public void checkGameWin (boolean showingMistakes) {
+        //System.out.println("Initially called as showing mistakes: " + showingMistakes);
+        ArrayList<Cell> currentMistakes = getMistakes();
+        currentMistakes.add(this.cells[0][0]);
+        currentMistakes.add(this.cells[1][1]);
+        currentMistakes.add(this.cells[0][1]);
+        currentMistakes.add(this.cells[0][2]);
+        currentMistakes.add(this.cells[0][3]);
+        currentMistakes.add(this.cells[0][4]);
+        currentMistakes.add(this.cells[0][5]);
+        currentMistakes.add(this.cells[1][2]);
+        currentMistakes.add(this.cells[1][3]);
+        currentMistakes.add(this.cells[1][4]);
+        currentMistakes.add(this.cells[1][5]);
+        currentMistakes.add(this.cells[1][0]);
+        if (currentMistakes.size() == 0) {
+            // The user has won if there are no mistakes detected
+            // return true;
+        } else {
+            if (showingMistakes) {
+                // Colour the incorrect cells red
+                for (Cell c : currentMistakes) {
+                    c.setShowingMistakes(true);
+                    c.dispCage();
+                }
+            } else {
+                // If not showing mistakes, it should still be checked that all cells should be turned off/reset
+                // this is so the cells return to how they were at the start when the show mistakes button has been turned off
+                // a lot of dupliction and recolouring, change the CSS in the method inside of the cell class to reflect this
+                for (Cell[] cr : this.cells) {
+                    for (Cell c : cr) {
+                        c.setShowingMistakes(false);
+                        c.dispCage();
+                    }
+                }
             }
         }
     }
