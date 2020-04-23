@@ -108,21 +108,16 @@ public class Cell {//implements ActionListener, WindowListener {
             setCss = "-fx-background-color: #000000, #29b6f6; -fx-background-insets: 0,";
         } else {
             // Only show mistakes on non-empty cells
-            if (this.display.getText() != "") {
-                if (this.showingMistakes) {
-                    if (this.correct) {
-                        // Set the cell green [not really necessary? --> The button just says show mistakes]
-                        setCss = "-fx-background-color: #000000, #00ff00; -fx-background-insets: 0,";
-                    } else {
-                        // Set the cell red
-                        setCss = "-fx-background-color: #000000, #ffbbaa; -fx-background-insets: 0,";
-                    }
+            if (this.showingMistakes) {
+                if (this.correct) {
+                    // Set the cell green [not really necessary? --> The button just says show mistakes]
+                    setCss = "-fx-background-color: #000000, #00ff00; -fx-background-insets: 0,";
                 } else {
-                    // If not showing mistakes then the cell should be white
-                    setCss = "-fx-background-color: #000000, #ffffff; -fx-background-insets: 0,";
+                    // Set the cell red
+                    setCss = "-fx-background-color: #000000, #ffbbaa; -fx-background-insets: 0,";
                 }
             } else {
-                // Empty cells should be white
+                // If not showing mistakes then the cell should be white
                 setCss = "-fx-background-color: #000000, #ffffff; -fx-background-insets: 0,";
             }
         }

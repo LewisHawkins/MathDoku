@@ -50,12 +50,19 @@ public class Cage {
 
     // Check if the entered values in the cells can be used with the operation to reach the target value
     public boolean checkCorrect () {
+        // If any of the cells are empty then the cage is incorrect
+        Iterator<Cell> emptyIter = myCells.iterator();
+        while (emptyIter.hasNext()) {
+            if (emptyIter.next().getDisplay() == "") {
+                return false;
+            }
+        }
         // Check that the sum of all the cells is equal or not to the target value
         if (this.operation.equals("+")) {
             int total = 0;
             Iterator<Cell> sumIter = myCells.iterator();
             while (sumIter.hasNext()) {
-                total += sumIter.next().getValue();
+                total += Integer.valueOf(sumIter.next().getDisplay());
             }
             if (total == this.targetValue) {
                 return true;
@@ -68,7 +75,7 @@ public class Cage {
             int total = 1;
             Iterator<Cell> mulIter = myCells.iterator();
             while (mulIter.hasNext()) {
-                total = total*mulIter.next().getValue();
+                total = total*Integer.valueOf(mulIter.next().getDisplay());
             }
             if (total == this.targetValue) {
                 return true;
@@ -78,22 +85,24 @@ public class Cage {
         }
         // Check that the minus operator can be used to reach the target value
         if (this.operation.equals("-")) {
+            System.out.println("CALL TO A MINUS");
             int total = this.targetValue;
             // WORK THIS OUT
             if (total == 10) {
                 return true;
             } else {
-                return false;
+                return true;
             }
         }
         // Check that the divide operator can be used to reach the target value
         if (this.operation.equals("÷")) {
+            System.out.println("CALL TO DIVIDE");
             int total = this.targetValue;
             // WORK THIS OUT
             if (total == 10) {
                 return true;
             } else {
-                return false;
+                return true;
             }
         }
         return false;

@@ -57,7 +57,7 @@ public class Mathdoku extends Application {
     // Nested array of the size^squared cell objects
     private Cell[][] cells = new Cell[size][size];
     // A list of all the cages that group the cells
-    private Cage[] cages = new Cage[2];
+    private ArrayList<Cage> cages;
     // The cell currently selected by the user so that they can highlight cells to enter information
     private Cell selectedCell;
     // Stacks of (10) actions from the user to enable the undo/redo buttons
@@ -409,6 +409,7 @@ public class Mathdoku extends Application {
                     Cage next = cageIter.next();
                     next.formatCage();
                 }
+                this.cages = cages;
             } else {
                 // Do something error based here
                 Label error = new Label ("Error");
@@ -500,41 +501,96 @@ public class Mathdoku extends Application {
     }
     // This should return an arraylist, as the size is not fixed
     public ArrayList<Cell> getMistakes () {
-        // Start with a list of all the non empty cells, and assume they're all correct
-
-
-
         // Check the 3 puzzle constraints
         ArrayList<Cell> allMistakes = new ArrayList<Cell>();
         // Check each row
+        /*
+        for (Cell[] cr : this.cells) {
+            boolean cellRowIncorrect = checkForDuplicates(cr);
+            if (cellRowIncorrect) {
+                for (Cell c : cr) {
+                    allMistakes.add(c);
+                }
+            }
+        }
 
+         */
         // Check each column
+        /*
+        for (int i = 0; i < this.size; i++) {
+            Cell[] columnOfCells = new Cell[this.size];
+            for (int j = 0; j < this.size; j++) {
+                System.out.println(j + "<j i>" + i);
+                columnOfCells[j] = this.cells[j][i];
+            }
+            // Check the column for duplicates
+            boolean cellColumnIncorrect = checkForDuplicates(columnOfCells);
+            if (cellColumnIncorrect) {
+                for (Cell c : columnOfCells) {
+                    allMistakes.add(c);
+                }
+            }
+        }
 
+         */
         // Check each of the cages
+        for (Cage c : this.cages) {
+            //System.out.println(c);
+            boolean cageCorrect = c.checkCorrect();
+            if (cageCorrect == false) {
+                //System.out.println("Gets here!");
+                ArrayList<Cell> cellsToAdd = c.getMyCells();
+                Iterator<Cell> cellIter = cellsToAdd.iterator();
+                while (cellIter.hasNext()) {
+                    Cell cellToAdd = cellIter.next();
+                    allMistakes.add(cellToAdd);
+                }
+            }
+        }
         return allMistakes;
     }
 
+    public boolean checkForDuplicates (Cell[] collection) {
+        ArrayList<String> rowContents = new ArrayList<String>();
+        //System.out.println("Checking the duplicates of: " + rowContents);
+        boolean rowIsIncorrect = false;
+        // The row should contain all of the numbers from 1 to the size of the row
+        for (Cell c : collection) {
+            if (c.getDisplay() == "") {
+                // One of the cells is empty, so mark the row as incorrect
+                rowIsIncorrect = true;
+                break;
+            } else if (rowContents.contains(c.getDisplay())) {
+                // The row contains a duplicate, so mark the row as incorrect
+                rowIsIncorrect = true;
+                break;
+            } else {
+                // The contents of the cell has not appeared before so add it to the list
+                rowContents.add(c.getDisplay());
+                //System.out.println(">: " + rowContents);
+            }
+        }
+        if (rowIsIncorrect) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public void checkGameWin (boolean showingMistakes) {
-        //System.out.println("Initially called as showing mistakes: " + showingMistakes);
         ArrayList<Cell> currentMistakes = getMistakes();
-        currentMistakes.add(this.cells[0][0]);
-        currentMistakes.add(this.cells[1][1]);
-        currentMistakes.add(this.cells[0][1]);
-        currentMistakes.add(this.cells[0][2]);
-        currentMistakes.add(this.cells[0][3]);
-        currentMistakes.add(this.cells[0][4]);
-        currentMistakes.add(this.cells[0][5]);
-        currentMistakes.add(this.cells[1][2]);
-        currentMistakes.add(this.cells[1][3]);
-        currentMistakes.add(this.cells[1][4]);
-        currentMistakes.add(this.cells[1][5]);
-        currentMistakes.add(this.cells[1][0]);
         if (currentMistakes.size() == 0) {
             // The user has won if there are no mistakes detected
             // return true;
         } else {
             if (showingMistakes) {
-                // Colour the incorrect cells red
+                // Reset the board before colouring the incorrect cells red
+                for (Cell[] cr : this.cells) {
+                    for (Cell c : cr) {
+                        c.setShowingMistakes(false);
+                        c.dispCage();
+                    }
+                }
                 for (Cell c : currentMistakes) {
                     c.setShowingMistakes(true);
                     c.dispCage();
