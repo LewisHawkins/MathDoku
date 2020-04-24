@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Collections;
 
 
 public class Cage {
@@ -50,15 +51,19 @@ public class Cage {
 
     // Check if the entered values in the cells can be used with the operation to reach the target value
     public boolean checkCorrect () {
-        // If any of the cells are empty then the cage is incorrect
+        // Only highlight the cells if they are completely filled
+        boolean completelyFilled = true;
         Iterator<Cell> emptyIter = myCells.iterator();
         while (emptyIter.hasNext()) {
             if (emptyIter.next().getDisplay() == "") {
-                return false;
+                completelyFilled = false;
             }
         }
-        // Check that the sum of all the cells is equal or not to the target value
+        if (completelyFilled == false) {
+            return true;
+        }
         if (this.operation.equals("+")) {
+            // Check that the sum of all the cells is equal or not to the target value
             int total = 0;
             Iterator<Cell> sumIter = myCells.iterator();
             while (sumIter.hasNext()) {
@@ -69,9 +74,8 @@ public class Cage {
             } else {
                 return false;
             }
-        }
-        // Check that the product of all the cells is equal or not to the target value
-        if (this.operation.equals("x")) {
+        } else if (this.operation.equals("x")) {
+            // Check that the product of all the cells is equal or not to the target value
             int total = 1;
             Iterator<Cell> mulIter = myCells.iterator();
             while (mulIter.hasNext()) {
@@ -82,30 +86,53 @@ public class Cage {
             } else {
                 return false;
             }
-        }
-        // Check that the minus operator can be used to reach the target value
-        if (this.operation.equals("-")) {
-            System.out.println("CALL TO A MINUS");
-            int total = this.targetValue;
-            // WORK THIS OUT
-            if (total == 10) {
+        } else if (this.operation.equals("-")) {
+            // Check that the minus operator can be used to reach the target value
+            // Create a list of the numbers in the cells so that it can be sorted from smallest to greatest
+            ArrayList<Integer> cellNumbers = new ArrayList<Integer>();
+            int total = 0;
+            Iterator<Cell> minusIter = myCells.iterator();
+            while (minusIter.hasNext()) {
+                int nextNum = Integer.valueOf(minusIter.next().getDisplay());
+                cellNumbers.add(nextNum);
+                total += nextNum;
+            }
+            Collections.sort(cellNumbers);
+            // If the target value is equal to the greatest number minus the sum of all the others, the cage is correct
+            int sumOfOthers = total - cellNumbers.get(cellNumbers.size() - 1);
+            if (cellNumbers.get(cellNumbers.size() - 1) - sumOfOthers == this.targetValue) {
                 return true;
             } else {
-                return true;
+                return false;
             }
-        }
-        // Check that the divide operator can be used to reach the target value
-        if (this.operation.equals("÷")) {
-            System.out.println("CALL TO DIVIDE");
-            int total = this.targetValue;
-            // WORK THIS OUT
-            if (total == 10) {
+        } else if (this.operation.equals(" ")) {
+            // Get the value entered in the only cell
+            int enteredValue = Integer.valueOf(this.myCells.get(0).getDisplay());
+            if (this.targetValue == enteredValue) {
                 return true;
             } else {
+                return false;
+            }
+        } else {
+            // Check that the divide operator can be used to reach the target value
+            // Create a list of the numbers in the cells so that it can be sorted from smallest to greatest
+            ArrayList<Integer> cellNumbers = new ArrayList<Integer>();
+            int total = 1;
+            Iterator<Cell> divIter = myCells.iterator();
+            while (divIter.hasNext()) {
+                int nextNum = Integer.valueOf(divIter.next().getDisplay());
+                cellNumbers.add(nextNum);
+                total = total*nextNum;
+            }
+            Collections.sort(cellNumbers);
+            // If the target value is equal to the greatest number divided by the product of all the others, the cage is correct
+            float productOfOthers = total / cellNumbers.get(cellNumbers.size() - 1);
+            if (cellNumbers.get(cellNumbers.size() - 1) / productOfOthers == this.targetValue) {
                 return true;
+            } else {
+                return false;
             }
         }
-        return false;
     }
 
     public Cell getTopLeftCell () {

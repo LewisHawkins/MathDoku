@@ -49,11 +49,19 @@ LIST OF THINGS TO CHANGE:
     - Change the name of the member variables for the undo/redo stacks to be more consistent
     - Ensure checkWin is being called every time the user selects a new cell, so that the user can't de-red each of the X cells by colouring them all [blue then white] by clicking on them all
     - THE ABOVE LIVE/BULLETPOINT IS TRUE FOR UNDOING ACTIONS AS WELL. ENTER NUMEBER --> HIGHLIGHT IT RED/WRONG --> UNDO == empty cell still red
+
+    - An existing cage highlighted as red, does not change to white once it is solved ----> until another cage is entered incorrectly when the original cage returns to white
+    -
+    - Is the above linked to when a cell is set as red, it clears all others? sometimes?
+    -
+    - Clearing the board using the clear board buttons does not unhighlight red cells that have been made red becauese they were entered correctly as an error
+    -
+    - CheckGameWin should be rewritten/restructured with the if/else? avoid code duplication?
  */
 
 public class Mathdoku extends Application {
     // The size (height/width) of the play grid
-    private final int size = 6;
+    private final int size = 4;
     // Nested array of the size^squared cell objects
     private Cell[][] cells = new Cell[size][size];
     // A list of all the cages that group the cells
@@ -211,7 +219,6 @@ public class Mathdoku extends Application {
                 //Boolean reverse = !
                 checkGameWin(!showMistakes.isSelected());
                 //System.out.println("SET ON MOUSE PRESSED: Initially called as showing mistakes: " + showMistakes.isSelected());
-                //System.out.println("FIHAIFUIAS IUADI");
             }
         });
         // Add the interaction to the keypad buttons so that they can be used
@@ -402,7 +409,7 @@ public class Mathdoku extends Application {
         }
         // Create the cages for the grid
         try {
-            ArrayList<Cage> cages = this.getCagesFromFile("test.txt");
+            ArrayList<Cage> cages = this.getCagesFromFile("4x4_divdiff.txt");
             if (cages != null) {
                 Iterator<Cage> cageIter = cages.iterator();
                 while (cageIter.hasNext()) {
@@ -441,38 +448,59 @@ public class Mathdoku extends Application {
             while ((line = br.readLine()) != null) {
                 // Each line of the file represents a new cage, with the target info and cells split by the space
                 String[] lineContents = line.split(" ");
-                // The start of the string has the number for the target value, and the operation
-                // The operation is the last character before the space
-                char op = lineContents[0].charAt(lineContents[0].length() - 1);
-                // The rest of the start of the string is the target number for that cage
-                String targetStr = lineContents[0].substring(0, lineContents[0].length() - 1);
-                int targetInt = Integer.parseInt(targetStr);
-
-                // The end of the string has the cell number for that cage seperated by commas
-                String[] cellNumbers = lineContents[1].split(",");
-                ArrayList<Cell> cageCells = new ArrayList<Cell>();
-                for (String i : cellNumbers) {
-                    // For each cell number create a new cell and put cells in the cages
-                    int cellNo = Integer.parseInt(i);
+                // If the line does not have an operator (+, x...) before the space the cage has only one cell
+                if ("0 1 2 3 4 5 6 7 8 9".contains(String.valueOf(lineContents[0].charAt(lineContents[0].length() - 1)))) {
+                    // The start of the string has the number for the target value, and the operation
+                    // Get the target value for the cage
+                    String targetStr = lineContents[0];
+                    int targetInt = Integer.parseInt(targetStr);
+                    char op = ' ';
+                    // Get the cell
+                    ArrayList<Cell> cageCells = new ArrayList<Cell>();
+                    int cellNo = Integer.parseInt(lineContents[1]);
                     int cellRow = this.getRowForCellNo(cellNo, this.size);
                     int cellCol = this.getColForCellNo(cellNo, this.size);
                     Cell cellInCage = this.cells[cellRow][cellCol];
                     cageCells.add(cellInCage);
+                    // Create the cage object
+                    Cage newCage = new Cage(cageCells, " ", targetInt);
                     // Remove from the error
                     errorSum -= cellNo;
-                }
-                Cage newCage = new Cage(cageCells, String.valueOf(op), targetInt);
-
-                //
-                // Test that the cage is valid
-                //
-                if (newCage.areCellsAdjacent()) {
-                    //System.out.println("Cage added successfully.");
+                    //
                     allCages.add(newCage);
                 } else {
-                    System.out.println("Cage failed to load.");
-                }
+                    // The operation is the last character before the space
+                    char op = lineContents[0].charAt(lineContents[0].length() - 1);
+                    // The rest of the start of the string is the target number for that cage
+                    String targetStr = lineContents[0].substring(0, lineContents[0].length() - 1);
+                    int targetInt = Integer.parseInt(targetStr);
 
+                    // The end of the string has the cell number for that cage seperated by commas
+                    String[] cellNumbers = lineContents[1].split(",");
+                    ArrayList<Cell> cageCells = new ArrayList<Cell>();
+                    for (String i : cellNumbers) {
+                        // For each cell number create a new cell and put cells in the cages
+                        int cellNo = Integer.parseInt(i);
+                        int cellRow = this.getRowForCellNo(cellNo, this.size);
+                        int cellCol = this.getColForCellNo(cellNo, this.size);
+                        Cell cellInCage = this.cells[cellRow][cellCol];
+                        cageCells.add(cellInCage);
+                        // Remove from the error
+                        errorSum -= cellNo;
+                    }
+                    Cage newCage = new Cage(cageCells, String.valueOf(op), targetInt);
+                    // Test that the cage is valid
+                    if (newCage.areCellsAdjacent()) {
+                        //System.out.println("Cage added successfully.");
+                        allCages.add(newCage);
+                    } else {
+                        /*
+                        THIS NEEDS SOME MORE ERROR HANDLING ---> CHECK FAQ'S ABOUT WHAT TO DO
+                        IF THE FILE DECIDES TO SHIT ITSELF WHILE LOADING
+                         */
+                        System.out.println("Cage failed to load.");
+                    }
+                }
             }
             // After subtracting all of the cell numbers, the errorSum integer will be equal to 0 if each of the cell
             // numbers from 1 to gridSize^2 appears each appears once and only once
@@ -503,8 +531,8 @@ public class Mathdoku extends Application {
     public ArrayList<Cell> getMistakes () {
         // Check the 3 puzzle constraints
         ArrayList<Cell> allMistakes = new ArrayList<Cell>();
-        // Check each row
         /*
+        // Check each row
         for (Cell[] cr : this.cells) {
             boolean cellRowIncorrect = checkForDuplicates(cr);
             if (cellRowIncorrect) {
@@ -513,14 +541,10 @@ public class Mathdoku extends Application {
                 }
             }
         }
-
-         */
         // Check each column
-        /*
         for (int i = 0; i < this.size; i++) {
             Cell[] columnOfCells = new Cell[this.size];
             for (int j = 0; j < this.size; j++) {
-                System.out.println(j + "<j i>" + i);
                 columnOfCells[j] = this.cells[j][i];
             }
             // Check the column for duplicates
@@ -531,11 +555,10 @@ public class Mathdoku extends Application {
                 }
             }
         }
-
          */
+
         // Check each of the cages
         for (Cage c : this.cages) {
-            //System.out.println(c);
             boolean cageCorrect = c.checkCorrect();
             if (cageCorrect == false) {
                 //System.out.println("Gets here!");
@@ -547,6 +570,7 @@ public class Mathdoku extends Application {
                 }
             }
         }
+        //System.out.println("allMistakes has this many cells: " + allMistakes.size());
         return allMistakes;
     }
 
@@ -580,19 +604,46 @@ public class Mathdoku extends Application {
     public void checkGameWin (boolean showingMistakes) {
         ArrayList<Cell> currentMistakes = getMistakes();
         if (currentMistakes.size() == 0) {
-            // The user has won if there are no mistakes detected
-            // return true;
+            // The user has won if there are no mistakes detected and every cell is filled
+            boolean everyCellFilled = true;
+            for (Cell[] cr : this.cells) {
+                for (Cell c : cr) {
+                    if (c.getDisplay() == "") {
+                        everyCellFilled = false;
+                    }
+                }
+            }
+            // If the boolean now has the value false there was a cell that wasn't filled
+            if (everyCellFilled) {
+                // The user has won!
+            } else {
+                // Reset the board before colouring the incorrect cells red
+                for (Cell[] cr : this.cells) {
+                    for (Cell c : cr) {
+                        c.setShowingMistakes(false);
+                        c.setCorrect(true);
+                        c.dispCage();
+                    }
+                }
+                for (Cell c : currentMistakes) {
+                    c.setShowingMistakes(true);
+                    c.setCorrect(false);
+                    c.dispCage();
+                }
+            }
         } else {
             if (showingMistakes) {
                 // Reset the board before colouring the incorrect cells red
                 for (Cell[] cr : this.cells) {
                     for (Cell c : cr) {
                         c.setShowingMistakes(false);
+                        c.setCorrect(true);
                         c.dispCage();
                     }
                 }
                 for (Cell c : currentMistakes) {
                     c.setShowingMistakes(true);
+                    c.setCorrect(false);
                     c.dispCage();
                 }
             } else {
@@ -665,7 +716,7 @@ public class Mathdoku extends Application {
             Action update = new Action(cellToChange, cellToChange.getDisplay(), Integer.toString(num));
             cellToChange.setDisplay(num);
             actionStack.push(update);
-            System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
+            //System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
             // Check the stack size always remains at 10
             if (actionStack.size() >= 10) {
                 // Take out the oldest element in the stack so that the size always has a maximum of 10
