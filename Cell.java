@@ -6,21 +6,19 @@ import javafx.scene.layout.HBox;
 import javafx.geometry.Pos;
 
 import java.awt.*;
-//import java.awt.event.*;
 import javafx.event.EventHandler;
 import javafx.scene.input.MouseEvent;
 
 import java.util.Date;
 
-public class Cell {//implements ActionListener, WindowListener {
+public class Cell {
     // A class for each of the cells that the user can input a number into
-    //private GridPane container;
     private VBox box;
     private Label cageValue;
     private int value;
     private int row;
     private int column;
-    //private HBox displayContainer;
+
     private Label display;
     private boolean selected;
     private long selectedTime;
@@ -67,38 +65,18 @@ public class Cell {//implements ActionListener, WindowListener {
         // Add the reaction to the cell being clicked
         this.box.setOnMouseClicked((new EventHandler<MouseEvent>() {
             public void handle (MouseEvent e) {
-                //System.out.println("Cell call!");
                 Date d = new Date();
                 setSelectedTime(d.getTime());
                 setSelected(true);
-                //dispCage();
+                // dispCage();
             }
         }));
 
         // Put the components together
-        this.box.getChildren().addAll(this.cageValue, this.display);//Container);
+        this.box.getChildren().addAll(this.cageValue, this.display);
         // Display the cell
         this.dispCage();
     }
-
-    // Interaction
-    /*
-    public void actionPerformed(ActionEvent e) {
-        System.out.println("WOOO >>>");
-        //text.setText("Button Clicked " + numClicks + " times");
-    }
-    public void windowClosing(WindowEvent e) {
-        System.exit(0);
-    }
-    public void windowOpened(WindowEvent e) {}
-    public void windowActivated(WindowEvent e) {}
-    public void windowIconified(WindowEvent e) {}
-    public void windowDeiconified(WindowEvent e) {}
-    public void windowDeactivated(WindowEvent e) {}
-    public void windowClosed(WindowEvent e) {}
-
-     */
-
 
     public void dispCage () {
         // Get the borders up to date
@@ -126,9 +104,6 @@ public class Cell {//implements ActionListener, WindowListener {
         }
         setCss += ";";
         this.box.setStyle(setCss);
-        // Get the target label up to date
-
-        // Get the value up to date
     }
 
     // Getters

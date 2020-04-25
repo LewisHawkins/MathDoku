@@ -1,4 +1,7 @@
 import javafx.application.Application;
+
+import javafx.geometry.Pos;
+
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.*;
 import javafx.scene.control.Button;
@@ -8,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -36,34 +40,25 @@ import java.io.IOException;
 
 /*
 LIST OF THINGS TO CHANGE:
-    - Mgake the whole window resize correctly, setHGrow and things
-    - Make the menu buttons look nicer (same size / logos)
-    -
-    - Wrap the gridpane in a group or something so the black doesn't spread
-    - Make the number bigger inside of the cell text box
+    - Make the whole window have a minimum size, so that it cannot be made smaller than the buttons/puzzle
+    - Add a padding around the outside of the buttons (menuContainer??) so their edges don't touch the black line or the edge of the window itself
     - Change operation variable in Cage class from string to char
-    - Redo the error detection for getCagesFromFile. The errorSum thing was nice but sometimes won't work by fluke number chance
-    - User needs to be able to enter the puzzle through appropriate text input control
+    - Redo the error detection for getCagesFromFile. The errorSum thing was nice but sometimes won't work by fluke number chance [copy the no duplicates thing, with .contains]
     - See what happens when tryin to input a number at the start before clicking on a cell for the first time
     - Attempting to select the top left cell at the start of the game doesn't work --> default value?
     - Change the name of the member variables for the undo/redo stacks to be more consistent
     - Ensure checkWin is being called every time the user selects a new cell, so that the user can't de-red each of the X cells by colouring them all [blue then white] by clicking on them all
     - THE ABOVE LIVE/BULLETPOINT IS TRUE FOR UNDOING ACTIONS AS WELL. ENTER NUMEBER --> HIGHLIGHT IT RED/WRONG --> UNDO == empty cell still red
-
-    - An existing cage highlighted as red, does not change to white once it is solved ----> until another cage is entered incorrectly when the original cage returns to white
-    -
-    - Is the above linked to when a cell is set as red, it clears all others? sometimes?
-    -
-    - Clearing the board using the clear board buttons does not unhighlight red cells that have been made red becauese they were entered correctly as an error
-    -
     - CheckGameWin should be rewritten/restructured with the if/else? avoid code duplication?
+    - Remove the 0 and X button on the keypad, center the C just in the middle on bottom row? Make button span 3 spaces?
  */
 
 public class Mathdoku extends Application {
     // The size (height/width) of the play grid
-    private final int size = 4;
+    private final int size = 5;
     // Nested array of the size^squared cell objects
     private Cell[][] cells = new Cell[size][size];
+    //private Cell[][] cells;
     // A list of all the cages that group the cells
     private ArrayList<Cage> cages;
     // The cell currently selected by the user so that they can highlight cells to enter information
@@ -81,16 +76,21 @@ public class Mathdoku extends Application {
         // Set the title of the GUI
         stage.setTitle("Mathdoku");
 
-        // Make the largest frame that everything will be contained in
+        // Make the main frame that everything will be contained in
         HBox master = new HBox(5);
+        master.setStyle("-fx-background-color: #000000;"); // The thin black line to seperate the two sections
 
-        // On the left will be the grid for the actual mathdok puzzle, and the options will be on the right
+        // On the left will be the grid for the mathdoku puzzle and the options will be on the right
+        HBox puzzleContainer = new HBox(5);
         GridPane puzzle = new GridPane();
+        puzzle.setStyle("-fx-background-color: #999999; -fx-padding: 25;");
+        //puzzle.setStyle("-fx-background-color: #999999;");
         //puzzle.setStyle("-fx-border-style: solid; -fx-border-width: 5px; -fx-border-color: black; -fx-background-color: #0000ff; -fx-background-fill: #0000ff; -fx-padding: 5;");
-        puzzle.setStyle("-fx-background-color: black; -fx-vgap: 2; -fx-hgap: 2 ; -fx-padding: 4;"); //padding goes around the whole grid, h/vgaps are inbetween cells
-        //puzzle.setHgap(5);
-        //puzzle.setVgap(5);
-        VBox menu = new VBox(6);
+        //puzzle.setStyle("-fx-background-color: #999999; -fx-vgap: 1; -fx-hgap: 1 ;");// -fx-padding: 4;"); //padding goes around the whole grid, h/vgaps are inbetween cells
+
+        HBox menuContainer = new HBox(5);
+        VBox menu = new VBox(5);
+        menu.setStyle("-fx-background-color: #444444;");
 
         // Puzzle stuff
         this.createGrid(this.size, puzzle);
@@ -100,9 +100,9 @@ public class Mathdoku extends Application {
         Button undo = new Button("Undo");
         Button redo = new Button("Redo");
         Button clear = new Button("Clear");
-        Button loadFile = new Button("Load game from file");
-        Button loadText = new Button("Load game from text");
-        ToggleButton showMistakes = new ToggleButton("Show mistakes");
+        Button loadFile = new Button("Load Game From File");
+        Button loadText = new Button("Load game From Text");
+        ToggleButton showMistakes = new ToggleButton("Show Mistakes");
         // The menu also contains a keypad so the user can enter numerical input without a keyboard
         GridPane keypad = new GridPane();
         Button key1 = new Button("1");
@@ -153,7 +153,6 @@ public class Mathdoku extends Application {
                 // Disable/Enable the buttons if necessary
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
-                //System.out.println("The undo stack now looks like:" + actionStack);
                 checkGameWin(showMistakes.isSelected());
             }
         });
@@ -169,7 +168,6 @@ public class Mathdoku extends Application {
                 // Disable/Enable the buttons if necessary
                 UndoHandler u = new UndoHandler(actionStack);
                 RedoHandler r = new RedoHandler(redoStack);
-                //System.out.println("The undo stack now looks like:" + actionStack);
                 checkGameWin(showMistakes.isSelected());
             }
         });
@@ -197,6 +195,7 @@ public class Mathdoku extends Application {
                         System.out.println("Pressed cancel.");
                     }
                 });
+                System.out.println("I get here>?>");
                 checkGameWin(showMistakes.isSelected());
             }
         });
@@ -204,21 +203,10 @@ public class Mathdoku extends Application {
 
 
         // Add functionality to the button to show mistakes
-        /*
-        showMistakes.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>(){
-            public void handle(MouseEvent event) {
-                // This will turn on and off the shown mistakes when this button is both turned on and off
-                //checkGameWin(showMistakes.isSelected());
-            }
-        });
-
-         */
         showMistakes.setOnMousePressed(new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // This occurs before the button's state changes, so call the check win function with the opposite
-                //Boolean reverse = !
                 checkGameWin(!showMistakes.isSelected());
-                //System.out.println("SET ON MOUSE PRESSED: Initially called as showing mistakes: " + showMistakes.isSelected());
             }
         });
         // Add the interaction to the keypad buttons so that they can be used
@@ -320,7 +308,6 @@ public class Mathdoku extends Application {
                 Action update = new Action(cellToChange, cellToChange.getDisplay(), "");
                 cellToChange.setDisplay(0);
                 actionStack.push(update);
-                //System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
                 // Check the stack size always remains at 10
                 if (actionStack.size() >= 10) {
                     // Take out the oldest element in the stack so that the size always has a maximum of 10
@@ -329,8 +316,7 @@ public class Mathdoku extends Application {
                 checkGameWin(showMistakes.isSelected());
             }
         });
-
-        // Add all the buttons to the GUI
+        // Add all the buttons to the keypad
         keypad.add(key1, 0, 0);
         keypad.add(key2, 1, 0);
         keypad.add(key3, 2, 0);
@@ -343,37 +329,48 @@ public class Mathdoku extends Application {
         keypad.add(keyC, 1, 3);
         keypad.add(key0, 0, 3);
         keypad.add(keyX, 2, 3);
-
+        // Add all the buttons to the menu section of the window
+        keypad.setAlignment(Pos.CENTER);
         menu.getChildren().addAll(undo, redo, clear, loadFile, loadText, showMistakes, keypad);
 
-        // Add the 2 large components to the master pane
-        master.getChildren().addAll(puzzle, menu);
+        // Edit the 2 large sections
+        puzzleContainer.getChildren().add(puzzle);
+        puzzleContainer.setHgrow(puzzle, Priority.ALWAYS);
+        puzzle.setAlignment(Pos.CENTER);
+        menuContainer.getChildren().add(menu);
+        menu.setAlignment(Pos.CENTER);
+
+        // Add the largest components to the main frame and set the growth of the window to scale with the puzzle section
+        master.getChildren().addAll(puzzleContainer, menuContainer);
+        master.setHgrow(puzzleContainer, Priority.ALWAYS);
 
         // Create a scene from the master pane
         Scene scene = new Scene(master);
 
-        // Apply the keyboard/mouse interaction handling
+        // Apply the keyboard and mouse interaction handling
         scene.setOnKeyPressed(new EventHandler<KeyEvent>(){
             public void handle(KeyEvent event) {
                 int newCellNumber = 0;
+                // Get the key that was pressed and call a function to ensure that it's a valid key
                 KeyCode keyPressed = event.getCode();
-                // Get the key that was pressed, call a function to ensure that it's a valid number key and display it
                 newCellNumber = validateKeyPress(keyPressed);
-                Cell cellToChange = getMostRecentSelected();
-                // Create a new Action object and add it to the stack
-                Action update = new Action(cellToChange, cellToChange.getDisplay(), Integer.toString(newCellNumber));
-                cellToChange.setDisplay(newCellNumber);
-                actionStack.push(update);
-                //System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
-                // Check the stack size always remains at 10
-                if (actionStack.size() >= 10) {
-                    // Take out the oldest element in the stack so that the size always has a maximum of 10
-                    actionStack.remove(0);
+                // The number 10 is used to indicate something going wrong, so the cell should not be changed from this key press
+                if (newCellNumber < 10) {
+                    Cell cellToChange = getMostRecentSelected();
+                    // Create a new Action object and add it to the stack
+                    Action update = new Action(cellToChange, cellToChange.getDisplay(), Integer.toString(newCellNumber));
+                    cellToChange.setDisplay(newCellNumber);
+                    actionStack.push(update);
+                    // Check the stack size always remains at 10
+                    if (actionStack.size() >= 10) {
+                        // Take out the oldest element in the stack so that the size always has a maximum of 10
+                        actionStack.remove(0);
+                    }
+                    // See if the buttons should be disabled
+                    UndoHandler u = new UndoHandler(actionStack);
+                    RedoHandler r = new RedoHandler(redoStack);
+                    checkGameWin(showMistakes.isSelected());
                 }
-                // See if the buttons should be disabled
-                UndoHandler u = new UndoHandler(actionStack);
-                RedoHandler r = new RedoHandler(redoStack);
-                checkGameWin(showMistakes.isSelected());
             }
         });
 
@@ -409,7 +406,7 @@ public class Mathdoku extends Application {
         }
         // Create the cages for the grid
         try {
-            ArrayList<Cage> cages = this.getCagesFromFile("4x4_divdiff.txt");
+            ArrayList<Cage> cages = this.getCagesFromFile("5x5.txt");
             if (cages != null) {
                 Iterator<Cage> cageIter = cages.iterator();
                 while (cageIter.hasNext()) {
@@ -491,7 +488,6 @@ public class Mathdoku extends Application {
                     Cage newCage = new Cage(cageCells, String.valueOf(op), targetInt);
                     // Test that the cage is valid
                     if (newCage.areCellsAdjacent()) {
-                        //System.out.println("Cage added successfully.");
                         allCages.add(newCage);
                     } else {
                         /*
@@ -531,7 +527,7 @@ public class Mathdoku extends Application {
     public ArrayList<Cell> getMistakes () {
         // Check the 3 puzzle constraints
         ArrayList<Cell> allMistakes = new ArrayList<Cell>();
-        /*
+
         // Check each row
         for (Cell[] cr : this.cells) {
             boolean cellRowIncorrect = checkForDuplicates(cr);
@@ -555,8 +551,6 @@ public class Mathdoku extends Application {
                 }
             }
         }
-         */
-
         // Check each of the cages
         for (Cage c : this.cages) {
             boolean cageCorrect = c.checkCorrect();
@@ -576,7 +570,6 @@ public class Mathdoku extends Application {
 
     public boolean checkForDuplicates (Cell[] collection) {
         ArrayList<String> rowContents = new ArrayList<String>();
-        //System.out.println("Checking the duplicates of: " + rowContents);
         boolean rowIsIncorrect = false;
         // The row should contain all of the numbers from 1 to the size of the row
         for (Cell c : collection) {
@@ -591,7 +584,6 @@ public class Mathdoku extends Application {
             } else {
                 // The contents of the cell has not appeared before so add it to the list
                 rowContents.add(c.getDisplay());
-                //System.out.println(">: " + rowContents);
             }
         }
         if (rowIsIncorrect) {
@@ -662,7 +654,7 @@ public class Mathdoku extends Application {
 
 
     // Interaction/Handling
-    public int validateKeyPress(KeyCode keyCode) {
+    public int validateKeyPress (KeyCode keyCode) {
         int newNumber = 0;
         // 8 Case statements needed as the largest size that the board can be is 8 by 8
         switch (keyCode) {
@@ -690,20 +682,18 @@ public class Mathdoku extends Application {
             case DIGIT8:
                 newNumber = 8;
                 break;
+            case BACK_SPACE:
+                newNumber = 0;
+                break;
             default:
                 // If any invalid key is pressed the value 0 should be returned to indiciate this
-                newNumber = 0;
+                newNumber = 10;
         }
         // You can't enter a number into a cell if it is bigger than the grid size
         if (newNumber > this.size) {
-            newNumber = 0;
+            newNumber = 10;
         }
         return newNumber;
-    }
-
-    // Is this actually used anywhere???
-    public void testFunc () {
-        System.out.println("REEE");
     }
 
     public void keypadNumberPress (int num) {
@@ -716,13 +706,11 @@ public class Mathdoku extends Application {
             Action update = new Action(cellToChange, cellToChange.getDisplay(), Integer.toString(num));
             cellToChange.setDisplay(num);
             actionStack.push(update);
-            //System.out.println("STACK IS CURRENTLY: " + actionStack + ". It currently has this many items: " + actionStack.size());
             // Check the stack size always remains at 10
             if (actionStack.size() >= 10) {
                 // Take out the oldest element in the stack so that the size always has a maximum of 10
                 actionStack.remove(0);
             }
-            // checkButtonDisability(this.actionStack, )
         }
     }
 
@@ -755,21 +743,6 @@ public class Mathdoku extends Application {
             b.setDisable(false);
         }
     }
-
-    /*
-    public void actionPerformed(ActionEvent e) {
-        System.out.println("WOO !!!");
-        //text.setText("Button Clicked " + numClicks + " times");
-    }
-
-    // Overwrites to get working
-    public void windowOpened(WindowEvent e) {}
-    public void windowActivated(WindowEvent e) {}
-    public void windowIconified(WindowEvent e) {}
-    public void windowDeiconified(WindowEvent e) {}
-    public void windowDeactivated(WindowEvent e) {}
-    public void windowClosed(WindowEvent e) {}
-    */
 
     // Getters
     int getRowForCellNo (int cellNo, int gridSize) {

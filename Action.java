@@ -14,15 +14,10 @@ public class Action {
         this.valueAfter = valueAfter;
     }
 
-    public void test () {
-        System.out.println("BEFORE: " + valueBefore + ". AFTER: " + valueAfter + ".");
-    }
-
     // Undo the action. This method returns an Action as calling undo is itself performing an action
     public void undo () {
         System.out.println("An undo has occured.");
         this.affectedCell.setDisplay(Integer.parseInt(this.valueBefore));
-        // return new Action(affectedCell, )
     }
 
     // Redo the action. This is esssentially the same as performing the action again
