@@ -6,8 +6,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -18,6 +21,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
+
+import javax.swing.JFileChooser;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -54,8 +59,10 @@ LIST OF THINGS TO CHANGE:
  */
 
 public class Mathdoku extends Application {
+    // The area where the user plays the game
+    private GridPane puzzlePane;
     // The size (height/width) of the play grid
-    private final int size = 5;
+    private int size = 5;
     // Nested array of the size^squared cell objects
     private Cell[][] cells = new Cell[size][size];
     //private Cell[][] cells;
@@ -83,7 +90,9 @@ public class Mathdoku extends Application {
         // On the left will be the grid for the mathdoku puzzle and the options will be on the right
         HBox puzzleContainer = new HBox(5);
         GridPane puzzle = new GridPane();
-        puzzle.setStyle("-fx-background-color: #999999; -fx-padding: 25;");
+        this.puzzlePane = puzzle;
+        puzzle.setStyle("-fx-background-color: #999999; -fx-padding: 60;");
+        puzzleContainer.setStyle("-fx-background-color: #FF0000;");
         //puzzle.setStyle("-fx-background-color: #999999;");
         //puzzle.setStyle("-fx-border-style: solid; -fx-border-width: 5px; -fx-border-color: black; -fx-background-color: #0000ff; -fx-background-fill: #0000ff; -fx-padding: 5;");
         //puzzle.setStyle("-fx-background-color: #999999; -fx-vgap: 1; -fx-hgap: 1 ;");// -fx-padding: 4;"); //padding goes around the whole grid, h/vgaps are inbetween cells
@@ -93,7 +102,10 @@ public class Mathdoku extends Application {
         menu.setStyle("-fx-background-color: #444444;");
 
         // Puzzle stuff
-        this.createGrid(this.size, puzzle);
+        /*
+        MOVE THIS METHOD TO INSIDE THE BUTTON PRESS FOR THE 'LOAD GAMES' BUTTONS, AND ADD AN ADDITION PARAMETER --> OVERLOAD THE TWO BUTTON'S LOADING METHODS?
+         */
+        //this.createGrid(this.size, puzzle);
 
         // Menu stuff
         // The menu contains buttons for the user to control the game
@@ -195,13 +207,67 @@ public class Mathdoku extends Application {
                         System.out.println("Pressed cancel.");
                     }
                 });
-                System.out.println("I get here>?>");
                 checkGameWin(showMistakes.isSelected());
             }
         });
         // Add functionality to the two load buttons
+        loadFile.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Open a dialog box that lets the user select the file for the puzzle
+                JFileChooser userChooseFile = new JFileChooser();
+                userChooseFile.setCurrentDirectory(new File(System.getProperty("user.home")));
+                int result = userChooseFile.showOpenDialog(userChooseFile);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = userChooseFile.getSelectedFile();
+                    String selectedFilename = selectedFile.getAbsolutePath();
+                    // Get the contents of the file selected by the user
+                    try {
+                        ArrayList<String> selectedFileContents = getCagesFromFile(selectedFilename);
+                        // Use the contents to create the game for the user
+                        GridPane puzzlePane = getPuzzlePane();
+                        createGrid(selectedFileContents, puzzlePane);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        System.out.println("There was an error!");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        System.out.println("There was an error!");
+                    }
+                }
+            }
+        });
+        loadText.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Open a new window with a text box that will let the user input the cage information
+                Stage loadTextWindow = new Stage();
+                loadTextWindow.initOwner(stage);
+                // The window contains a label, area to enter the text and a confirmation button
+                VBox loadTextFrame = new VBox(5);
+                Label loadTextLabel = new Label("Please enter the text to load the puzzle:");
+                TextArea textEntryBox = new TextArea();
+                Button loadTextButton = new Button("Done");
+                // When the button is pressed use the text entered by the user to make the puzzle and close the window
+                loadTextButton.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+                    public void handle(MouseEvent event) {
+                        String enteredText = textEntryBox.getText();
+                        String[] enteredTextLines = enteredText.split("\n");
+                        ArrayList<String> enteredTextLinesArray = new ArrayList<String>();
+                        for (String line : enteredTextLines) {
+                            enteredTextLinesArray.add(line);
+                        }
+                        GridPane puzzlePane = getPuzzlePane();
+                        createGrid(enteredTextLinesArray, puzzlePane);
+                        loadTextWindow.close();
+                    }
+                });
 
-
+                //
+                loadTextFrame.getChildren().addAll(loadTextLabel, textEntryBox, loadTextButton);
+                Scene loadTextScene = new Scene(loadTextFrame);
+                loadTextWindow.setScene(loadTextScene);
+                loadTextWindow.show();
+            }
+        });
         // Add functionality to the button to show mistakes
         showMistakes.setOnMousePressed(new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
@@ -344,6 +410,19 @@ public class Mathdoku extends Application {
         master.getChildren().addAll(puzzleContainer, menuContainer);
         master.setHgrow(puzzleContainer, Priority.ALWAYS);
 
+        // set min size
+        //puzzle.setMinWidth(Control.USE_PREF_SIZE + 120);
+        //puzzle.setMinHeight(Control.USE_PREF_SIZE + 120);
+        stage.setMinWidth(600);
+        stage.setMinHeight(600);
+        /*
+        stage.setMaxSize(300)
+        puzzle.setMinWidth(Control.USE_PREF_SIZE);
+        menuContainer.setMinWidth(Control.USE_PREF_SIZE);
+        puzzle.setMinHeight(Control.USE_PREF_SIZE);
+        menuContainer.setMinHeight(Control.USE_PREF_SIZE);
+         */
+
         // Create a scene from the master pane
         Scene scene = new Scene(master);
 
@@ -392,6 +471,40 @@ public class Mathdoku extends Application {
     }
 
     // Grid/Cage setup
+    void createGrid (ArrayList<String> gridContents, GridPane p) {
+        // Find the grid size of the new puzzle
+        int sizeOfPuzzle = findPuzzleSize(gridContents);
+        this.size = sizeOfPuzzle;
+        this.cells = new Cell[sizeOfPuzzle][sizeOfPuzzle];
+
+        // Create the cells for the grid
+        for (int i = 0; i < this.size; i++) {
+            Cell[] newRow = new Cell[this.size];
+            for (int j = 0; j < this.size; j++) {
+                // Create a new cell object for the row/col co-ordiante and add it to the gridpane
+                Cell c = new Cell(j, i);
+                p.add(c.getBox(), j, i);
+                newRow[j] = c;
+            }
+            this.cells[i] = newRow;
+        }
+
+        // Get the cages that group the cells for the puzzle
+        ArrayList<Cage> cages = getCagesFromArray(gridContents);
+        // getCagesFromArray returns null if there was an error loading the puzzle
+        if (cages != null) {
+            Iterator<Cage> cageIter = cages.iterator();
+            while (cageIter.hasNext()) {
+                Cage next = cageIter.next();
+                next.formatCage();
+                this.cages = cages;
+            }
+        } else {
+            // Alert the user that there was an error loading the file
+            System.out.println("There was an error loading that file!");
+        }
+    }
+    /*
     void createGrid (int size, GridPane p)  {
         // Create the cells for the grid
         for (int i = 0; i < size; i++) {
@@ -427,7 +540,76 @@ public class Mathdoku extends Application {
             e.printStackTrace();
         }
     }
+     */
+    int findPuzzleSize (ArrayList<String> contents) {
+        return 5;
+    }
 
+    ArrayList<Cage> getCagesFromArray (ArrayList<String> gridContents) {
+        // Use the contents to make the cages for the puzzle
+        ArrayList<Cage> allCages = new ArrayList<Cage>();
+        // Create an iterator to loop through the contents
+        Iterator<String> contentIter = gridContents.iterator();
+        while (contentIter.hasNext()) {
+            String line = contentIter.next();
+            // Each line of the file represents a new cage, with the target info and cells split by the space
+            String[] lineContents = line.split(" ");
+            // If the line does not have an operator (+, x...) before the space the cage has only one cell
+            if ("0 1 2 3 4 5 6 7 8 9".contains(String.valueOf(lineContents[0].charAt(lineContents[0].length() - 1)))) {
+                // The start of the string has the number for the target value, and the operation
+                // Get the target value for the cage
+                String targetStr = lineContents[0];
+                int targetInt = Integer.parseInt(targetStr);
+                char op = ' ';
+                // Get the cell
+                ArrayList<Cell> cageCells = new ArrayList<Cell>();
+                int cellNo = Integer.parseInt(lineContents[1]);
+                int cellRow = this.getRowForCellNo(cellNo, this.size);
+                int cellCol = this.getColForCellNo(cellNo, this.size);
+                Cell cellInCage = this.cells[cellRow][cellCol];
+                cageCells.add(cellInCage);
+                // Create the cage object
+                Cage newCage = new Cage(cageCells, " ", targetInt);
+                // Remove from the error
+                //errorSum -= cellNo;
+                //
+                allCages.add(newCage);
+            } else {
+                // The operation is the last character before the space
+                char op = lineContents[0].charAt(lineContents[0].length() - 1);
+                // The rest of the start of the string is the target number for that cage
+                String targetStr = lineContents[0].substring(0, lineContents[0].length() - 1);
+                int targetInt = Integer.parseInt(targetStr);
+
+                // The end of the string has the cell number for that cage seperated by commas
+                String[] cellNumbers = lineContents[1].split(",");
+                ArrayList<Cell> cageCells = new ArrayList<Cell>();
+                for (String i : cellNumbers) {
+                    // For each cell number create a new cell and put cells in the cages
+                    int cellNo = Integer.parseInt(i);
+                    int cellRow = getRowForCellNo(cellNo, this.size);
+                    int cellCol = getColForCellNo(cellNo, this.size);
+                    Cell cellInCage = this.cells[cellRow][cellCol];
+                    cageCells.add(cellInCage);
+                    // Remove from the error
+                    //errorSum -= cellNo;
+                }
+                Cage newCage = new Cage(cageCells, String.valueOf(op), targetInt);
+                // Test that the cage is valid
+                if (newCage.areCellsAdjacent()) {
+                    allCages.add(newCage);
+                } else {
+                        /*
+                        THIS NEEDS SOME MORE ERROR HANDLING ---> CHECK FAQ'S ABOUT WHAT TO DO
+                        IF THE FILE DECIDES TO SHIT ITSELF WHILE LOADING
+                         */
+                    System.out.println("Cage failed to load.");
+                }
+            }
+        }
+        return allCages;
+    }
+    /*
     public ArrayList<Cage> getCagesFromFile (String filename) throws FileNotFoundException, IOException {
         try {
             // Use the contents of a file to make the cages for the puzzle
@@ -439,7 +621,7 @@ public class Mathdoku extends Application {
             InputStreamReader isr = new InputStreamReader(fis,"UTF-8");
             BufferedReader br = new BufferedReader(isr);
             String line;
-            // For error correction,the sum of all the cell numbers should equal to (1/2 * n * n+1) where n = total cells
+            // For error correction, the sum of all the cell numbers should equal to (1/2 * n * n+1) where n = total cells
             int totalCells = this.size*this.size;
             int errorSum = (totalCells * (totalCells+1))/2;
             while ((line = br.readLine()) != null) {
@@ -490,10 +672,10 @@ public class Mathdoku extends Application {
                     if (newCage.areCellsAdjacent()) {
                         allCages.add(newCage);
                     } else {
-                        /*
+
                         THIS NEEDS SOME MORE ERROR HANDLING ---> CHECK FAQ'S ABOUT WHAT TO DO
                         IF THE FILE DECIDES TO SHIT ITSELF WHILE LOADING
-                         */
+
                         System.out.println("Cage failed to load.");
                     }
                 }
@@ -513,7 +695,36 @@ public class Mathdoku extends Application {
         }
     }
 
+     */
+
+    ArrayList<String> getCagesFromFile (String filename) throws FileNotFoundException, IOException {
+        // Get the contents of the file and return it in an ArrayList of strings
+        ArrayList<String> fileContents = new ArrayList<String>();
+        //File gridFile = new File(filename);
+        try {
+            FileInputStream fis = new FileInputStream(filename);
+            InputStreamReader isr = new InputStreamReader(fis, "UTF-8");
+            BufferedReader br = new BufferedReader(isr);
+            String line;
+            while ((line = br.readLine()) != null) {
+                fileContents.add(line);
+            }
+            return fileContents;
+        } catch (FileNotFoundException e) {
+            System.out.println("That file could not be found!");
+            e.printStackTrace();
+            return null;
+        }
+    }
+    /*
+    void ArrayList<String> getCagesFromText (?) {
+        // If the user enters the text manually, use this method to get the array passed to create grid
+        return ;
+    }
+     */
+
     // Puzzle
+    /*
     public void clearGrid () {
         for (Cell[] cr : this.cells) {
             for (Cell c : cr) {
@@ -523,11 +734,13 @@ public class Mathdoku extends Application {
             }
         }
     }
+
+     */
+
     // This should return an arraylist, as the size is not fixed
     public ArrayList<Cell> getMistakes () {
         // Check the 3 puzzle constraints
         ArrayList<Cell> allMistakes = new ArrayList<Cell>();
-
         // Check each row
         for (Cell[] cr : this.cells) {
             boolean cellRowIncorrect = checkForDuplicates(cr);
@@ -753,10 +966,12 @@ public class Mathdoku extends Application {
         return ((cellNo - 1) % gridSize);
     }
 
+    GridPane getPuzzlePane () {
+        return this.puzzlePane;
+    }
+
     // Setters
     public void setSelectedCell (Cell c) {
         this.selectedCell = c;
     }
-
-
 }
