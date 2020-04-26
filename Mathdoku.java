@@ -24,7 +24,10 @@ import javafx.stage.Stage;
 
 import javax.swing.JFileChooser;
 
+import java.lang.Math;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Stack;
 
@@ -45,6 +48,14 @@ import java.io.IOException;
 
 /*
 LIST OF THINGS TO CHANGE:
+    . VITAL:
+    - Write the function that detects the size of the play grid in the file
+    - Error detection in the file input --> [One of each cell 1, 2, ..., N, each cell appears only once, no random bullshit characters>(exception)]
+    - Making winning actually do something
+    - Fix the default value of selected cell in the top left corner
+    - What happens when loading a new game after one has been loaded previously, succesfully and unsuccessfully
+
+    - NICE TO DO:
     - Make the whole window have a minimum size, so that it cannot be made smaller than the buttons/puzzle
     - Add a padding around the outside of the buttons (menuContainer??) so their edges don't touch the black line or the edge of the window itself
     - Change operation variable in Cage class from string to char
@@ -62,9 +73,9 @@ public class Mathdoku extends Application {
     // The area where the user plays the game
     private GridPane puzzlePane;
     // The size (height/width) of the play grid
-    private int size = 5;
+    private int size;// = 5;
     // Nested array of the size^squared cell objects
-    private Cell[][] cells = new Cell[size][size];
+    private Cell[][] cells;// = new Cell[size][size];
     //private Cell[][] cells;
     // A list of all the cages that group the cells
     private ArrayList<Cage> cages;
@@ -99,13 +110,7 @@ public class Mathdoku extends Application {
 
         HBox menuContainer = new HBox(5);
         VBox menu = new VBox(5);
-        menu.setStyle("-fx-background-color: #444444;");
-
-        // Puzzle stuff
-        /*
-        MOVE THIS METHOD TO INSIDE THE BUTTON PRESS FOR THE 'LOAD GAMES' BUTTONS, AND ADD AN ADDITION PARAMETER --> OVERLOAD THE TWO BUTTON'S LOADING METHODS?
-         */
-        //this.createGrid(this.size, puzzle);
+        menu.setStyle("-fx-background-color: #444444; -fx-padding: 30;");
 
         // Menu stuff
         // The menu contains buttons for the user to control the game
@@ -224,8 +229,13 @@ public class Mathdoku extends Application {
                     try {
                         ArrayList<String> selectedFileContents = getCagesFromFile(selectedFilename);
                         // Use the contents to create the game for the user
-                        GridPane puzzlePane = getPuzzlePane();
-                        createGrid(selectedFileContents, puzzlePane);
+                        // returns 0 if the number was wrong
+                        int newGameSize = checkCellData(selectedFileContents);
+                        if (newGameSize != 0) {
+                            setNewGameData(newGameSize);
+                            GridPane puzzlePane = getPuzzlePane();
+                            createGrid(selectedFileContents, puzzlePane);
+                        }
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                         System.out.println("There was an error!");
@@ -255,9 +265,17 @@ public class Mathdoku extends Application {
                         for (String line : enteredTextLines) {
                             enteredTextLinesArray.add(line);
                         }
-                        GridPane puzzlePane = getPuzzlePane();
-                        createGrid(enteredTextLinesArray, puzzlePane);
-                        loadTextWindow.close();
+                        // Use the contents to create the game for the user
+                        // returns 0 if the number was wrong
+                        //System.out.println("Test 1");
+                        int newGameSize = checkCellData(enteredTextLinesArray);
+                        //System.out.println("Test 2");
+                        if (newGameSize != 0) {
+                            setNewGameData(newGameSize);
+                            GridPane puzzlePane = getPuzzlePane();
+                            createGrid(enteredTextLinesArray, puzzlePane);
+                            loadTextWindow.close();
+                        }
                     }
                 });
 
@@ -413,8 +431,8 @@ public class Mathdoku extends Application {
         // set min size
         //puzzle.setMinWidth(Control.USE_PREF_SIZE + 120);
         //puzzle.setMinHeight(Control.USE_PREF_SIZE + 120);
-        stage.setMinWidth(600);
-        stage.setMinHeight(600);
+        stage.setMinWidth(1000);
+        stage.setMinHeight(800);
         /*
         stage.setMaxSize(300)
         puzzle.setMinWidth(Control.USE_PREF_SIZE);
@@ -472,11 +490,6 @@ public class Mathdoku extends Application {
 
     // Grid/Cage setup
     void createGrid (ArrayList<String> gridContents, GridPane p) {
-        // Find the grid size of the new puzzle
-        int sizeOfPuzzle = findPuzzleSize(gridContents);
-        this.size = sizeOfPuzzle;
-        this.cells = new Cell[sizeOfPuzzle][sizeOfPuzzle];
-
         // Create the cells for the grid
         for (int i = 0; i < this.size; i++) {
             Cell[] newRow = new Cell[this.size];
@@ -541,8 +554,53 @@ public class Mathdoku extends Application {
         }
     }
      */
-    int findPuzzleSize (ArrayList<String> contents) {
-        return 5;
+
+    int checkCellData (ArrayList<String> cellInfo) {
+        // The first check should ensure that only valid characters are present (operators, numbers, space, comma, newline)
+
+
+        // Work out the size of the puzzle
+        ArrayList<Integer> fileCellNumbers = new ArrayList<Integer>();
+        for (String line : cellInfo) {
+            String[] lineContents = line.split(" ");
+            String[] newCellNumbers = lineContents[1].split(",");
+            for (String cellNo : newCellNumbers) {
+                fileCellNumbers.add(Integer.parseInt(cellNo));
+            }
+        }
+        // Sort the cells to get the largest cell number, which is the square of the grid width and height
+        Collections.sort(fileCellNumbers);
+        int largestNumber = fileCellNumbers.size();
+        // If correct the biggest cell number should be a square number
+        int gridSize = (int) Math.sqrt(largestNumber);
+        if (Math.pow(gridSize, 2) != fileCellNumbers.size()) {
+            // 0 is used as a value to indicate that there has been an error
+            System.out.println("Number of cells is not a square!");
+            return 0;
+        }
+
+        // Check that a cell each cell appears only once
+        ArrayList<Integer> duplicateChecker = new ArrayList<Integer>();
+        for (Integer i : fileCellNumbers) {
+            // Add cell numbers to a new list until either all numbers are added or there is a duplicate
+            if (duplicateChecker.contains(i)) {
+                System.out.println("There is a double in the cells!");
+                return 0;
+            } else {
+                duplicateChecker.add(i);
+            }
+        }
+
+        // Check that every cell from 1 to the size of the grid squared is included
+        for (int i = 0; i < fileCellNumbers.size() - 1; i++) {
+            //System.out.println(i+1 + "> --- <" + i);
+            // Check that the difference between each of the cell numbers is 1
+            if (fileCellNumbers.get(i+1) - fileCellNumbers.get(i) != 1) {
+                System.out.println("Inconsistent cell numbers error");
+                return 0;
+            }
+        }
+        return gridSize;
     }
 
     ArrayList<Cage> getCagesFromArray (ArrayList<String> gridContents) {
@@ -820,6 +878,7 @@ public class Mathdoku extends Application {
             }
             // If the boolean now has the value false there was a cell that wasn't filled
             if (everyCellFilled) {
+                System.out.println("A winning move!");
                 // The user has won!
             } else {
                 // Reset the board before colouring the incorrect cells red
@@ -971,6 +1030,12 @@ public class Mathdoku extends Application {
     }
 
     // Setters
+    void setNewGameData (int gameSize) {
+        this.size = gameSize;
+        System.out.println(gameSize);
+        this.cells = new Cell[gameSize][gameSize];
+    }
+
     public void setSelectedCell (Cell c) {
         this.selectedCell = c;
     }
