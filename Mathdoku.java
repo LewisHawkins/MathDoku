@@ -8,10 +8,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -49,34 +52,27 @@ import java.io.IOException;
 /*
 LIST OF THINGS TO CHANGE:
     . VITAL:
-    - Write the function that detects the size of the play grid in the file
-    - Error detection in the file input --> [One of each cell 1, 2, ..., N, each cell appears only once, no random bullshit characters>(exception)]
     - Making winning actually do something
-    - Fix the default value of selected cell in the top left corner
-    - What happens when loading a new game after one has been loaded previously, succesfully and unsuccessfully
+    - Fix the default value of selected cell in the top left corner, and entering buttons before even selecting one
+    - Add error correction to allow only valid cells, add an alert popup for each of the error cases failing to load
 
     - NICE TO DO:
     - Make the whole window have a minimum size, so that it cannot be made smaller than the buttons/puzzle
-    - Add a padding around the outside of the buttons (menuContainer??) so their edges don't touch the black line or the edge of the window itself
-    - Change operation variable in Cage class from string to char
-    - Redo the error detection for getCagesFromFile. The errorSum thing was nice but sometimes won't work by fluke number chance [copy the no duplicates thing, with .contains]
-    - See what happens when tryin to input a number at the start before clicking on a cell for the first time
-    - Attempting to select the top left cell at the start of the game doesn't work --> default value?
     - Change the name of the member variables for the undo/redo stacks to be more consistent
     - Ensure checkWin is being called every time the user selects a new cell, so that the user can't de-red each of the X cells by colouring them all [blue then white] by clicking on them all
     - THE ABOVE LIVE/BULLETPOINT IS TRUE FOR UNDOING ACTIONS AS WELL. ENTER NUMEBER --> HIGHLIGHT IT RED/WRONG --> UNDO == empty cell still red
     - CheckGameWin should be rewritten/restructured with the if/else? avoid code duplication?
-    - Remove the 0 and X button on the keypad, center the C just in the middle on bottom row? Make button span 3 spaces?
+    - Big null error when pressing on the board without a game loaded
+    - Make the 'load game from text' popup look nicer
  */
 
 public class Mathdoku extends Application {
     // The area where the user plays the game
     private GridPane puzzlePane;
     // The size (height/width) of the play grid
-    private int size;// = 5;
-    // Nested array of the size^squared cell objects
-    private Cell[][] cells;// = new Cell[size][size];
-    //private Cell[][] cells;
+    private int size;
+    // Nested array of the cell objects
+    private Cell[][] cells;
     // A list of all the cages that group the cells
     private ArrayList<Cage> cages;
     // The cell currently selected by the user so that they can highlight cells to enter information
@@ -132,10 +128,20 @@ public class Mathdoku extends Application {
         Button key8 = new Button("8");
         Button key9 = new Button("9");
         Button keyC = new Button("C");
-        Button key0 = new Button("0");
-        Button keyX = new Button("X");
+        // There are three buttons for the font size
+        HBox fontSize = new HBox(10);
+        fontSize.setStyle("-fx-background-color: #FFFFFF;  -fx-padding: 10;");
+        RadioButton smallFont = new RadioButton("Small");
+        smallFont.setSelected(true);
+        RadioButton mediumFont = new RadioButton("Medium");
+        RadioButton largeFont = new RadioButton("Large");
+        ToggleGroup fontGroup = new ToggleGroup();
+        smallFont.setToggleGroup(fontGroup);
+        mediumFont.setToggleGroup(fontGroup);
+        largeFont.setToggleGroup(fontGroup);
+        fontSize.getChildren().addAll(smallFont, mediumFont, largeFont);
 
-        // Inner classes to help the stack interaction
+        // Inner classes
         class UndoHandler {
             public UndoHandler (Stack stackToCheck) {
                 // Whenever an undo action is made, check if the button needs to be disabled
@@ -158,6 +164,13 @@ public class Mathdoku extends Application {
                 }
             }
         }
+        class LoadHandler {
+            public LoadHandler (Button b1, Button b2) {
+                b1.setDisable(true);
+                b2.setDisable(true);
+            }
+        }
+
         // Add functionality to the undo button
         undo.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
@@ -234,6 +247,7 @@ public class Mathdoku extends Application {
                         if (newGameSize != 0) {
                             setNewGameData(newGameSize);
                             GridPane puzzlePane = getPuzzlePane();
+                            new LoadHandler(loadFile, loadText);
                             createGrid(selectedFileContents, puzzlePane);
                         }
                     } catch (FileNotFoundException e) {
@@ -273,8 +287,9 @@ public class Mathdoku extends Application {
                         if (newGameSize != 0) {
                             setNewGameData(newGameSize);
                             GridPane puzzlePane = getPuzzlePane();
-                            createGrid(enteredTextLinesArray, puzzlePane);
+                            new LoadHandler(loadFile, loadText);
                             loadTextWindow.close();
+                            createGrid(enteredTextLinesArray, puzzlePane);
                         }
                     }
                 });
@@ -375,15 +390,6 @@ public class Mathdoku extends Application {
                 checkGameWin(showMistakes.isSelected());
             }
         });
-        key0.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
-            public void handle(MouseEvent event) {
-                // Insert the number into the highlighted cell
-                keypadNumberPress(0);
-                UndoHandler u = new UndoHandler(actionStack);
-                RedoHandler r = new RedoHandler(redoStack);
-                checkGameWin(showMistakes.isSelected());
-            }
-        });
         keyC.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
             public void handle(MouseEvent event) {
                 // When the clear button is pressed on the keypad, the highlighted cell should be cleared
@@ -411,11 +417,29 @@ public class Mathdoku extends Application {
         keypad.add(key8, 1, 2);
         keypad.add(key9, 2, 2);
         keypad.add(keyC, 1, 3);
-        keypad.add(key0, 0, 3);
-        keypad.add(keyX, 2, 3);
+        // Add interaction for the font size buttons
+        smallFont.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Set all font in the grid to large
+                setFontSize(0);
+            }
+        });
+        mediumFont.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Set all font in the grid to medium
+                setFontSize(1);
+            }
+        });
+        largeFont.addEventHandler(MouseEvent.MOUSE_RELEASED, new EventHandler<MouseEvent>(){
+            public void handle(MouseEvent event) {
+                // Set all font in the grid to large
+                setFontSize(2);
+            }
+        });
+
         // Add all the buttons to the menu section of the window
         keypad.setAlignment(Pos.CENTER);
-        menu.getChildren().addAll(undo, redo, clear, loadFile, loadText, showMistakes, keypad);
+        menu.getChildren().addAll(undo, redo, clear, loadFile, loadText, showMistakes, keypad, fontSize);
 
         // Edit the 2 large sections
         puzzleContainer.getChildren().add(puzzle);
@@ -557,7 +581,19 @@ public class Mathdoku extends Application {
 
     int checkCellData (ArrayList<String> cellInfo) {
         // The first check should ensure that only valid characters are present (operators, numbers, space, comma, newline)
-
+        for (String line : cellInfo) {
+            for (char c : line.toCharArray()) {
+                // Each character should be in the below string, or it is invalid
+                if ("0 1 2 3 4 5 6 7 8 9 + - x ,  ".contains(String.valueOf(c)) == false) {
+                    if ((int) c != 247) {
+                        if ((int) c != 32) {
+                            System.out.println("Input contains invalid character!);
+                            return 0;
+                        }
+                    }
+                }
+            }
+        }
 
         // Work out the size of the puzzle
         ArrayList<Integer> fileCellNumbers = new ArrayList<Integer>();
@@ -568,6 +604,7 @@ public class Mathdoku extends Application {
                 fileCellNumbers.add(Integer.parseInt(cellNo));
             }
         }
+
         // Sort the cells to get the largest cell number, which is the square of the grid width and height
         Collections.sort(fileCellNumbers);
         int largestNumber = fileCellNumbers.size();
@@ -593,7 +630,6 @@ public class Mathdoku extends Application {
 
         // Check that every cell from 1 to the size of the grid squared is included
         for (int i = 0; i < fileCellNumbers.size() - 1; i++) {
-            //System.out.println(i+1 + "> --- <" + i);
             // Check that the difference between each of the cell numbers is 1
             if (fileCellNumbers.get(i+1) - fileCellNumbers.get(i) != 1) {
                 System.out.println("Inconsistent cell numbers error");
@@ -628,9 +664,6 @@ public class Mathdoku extends Application {
                 cageCells.add(cellInCage);
                 // Create the cage object
                 Cage newCage = new Cage(cageCells, " ", targetInt);
-                // Remove from the error
-                //errorSum -= cellNo;
-                //
                 allCages.add(newCage);
             } else {
                 // The operation is the last character before the space
@@ -649,8 +682,6 @@ public class Mathdoku extends Application {
                     int cellCol = getColForCellNo(cellNo, this.size);
                     Cell cellInCage = this.cells[cellRow][cellCol];
                     cageCells.add(cellInCage);
-                    // Remove from the error
-                    //errorSum -= cellNo;
                 }
                 Cage newCage = new Cage(cageCells, String.valueOf(op), targetInt);
                 // Test that the cage is valid
@@ -1016,6 +1047,15 @@ public class Mathdoku extends Application {
         }
     }
 
+    public void setFontSize (int size) {
+        // Change the font size in every cell in the grid
+        for (Cell[] cr : this.cells) {
+            for (Cell c : cr) {
+                c.setFontSize(size);
+            }
+        }
+    }
+
     // Getters
     int getRowForCellNo (int cellNo, int gridSize) {
         return ((cellNo - 1) / gridSize);
@@ -1039,4 +1079,5 @@ public class Mathdoku extends Application {
     public void setSelectedCell (Cell c) {
         this.selectedCell = c;
     }
+
 }

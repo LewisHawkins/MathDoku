@@ -40,6 +40,7 @@ public class Cell {
 
         // The label for the cage's target
         this.cageValue = new Label(" "); // Keep a space at the start so it looks nice
+        this.cageValue.setStyle(" -fx-font: 11 arial;");
         this.cageValue.setPrefHeight(10);
         this.value = 0;
 
@@ -49,9 +50,9 @@ public class Cell {
 
         // The text box that the user will use to enter the number
         this.display = new Label("");
-        this.display.setAlignment(Pos.TOP_CENTER);
+        this.display.setAlignment(Pos.CENTER);
         this.display.setPrefWidth(60);
-        this.display.setStyle(" -fx-font: 16 arial; -fx-font-weight: bold;");
+        this.display.setStyle(" -fx-font: 14 arial; -fx-font-weight: bold;");
         //this.display.setStyle("-fx-border-style: solid; -fx-border-color: #ffffff; -fx-font: 16 arial; -fx-font-weight: bold; -fx-text-box-border: transparent"); // -fx-border-width: 10px; WTFFF
 
         // Add the functionality to interact with the user
@@ -79,8 +80,8 @@ public class Cell {
     }
 
     public void dispCage () {
-        // Get the borders up to date
         String setCss;
+        // Set the colour of the cell
         if (this.selected) {
             //System.out.println("SET ME BLUE");
             setCss = "-fx-background-color: #000000, #29b6f6; -fx-background-insets: 0,";
@@ -99,6 +100,7 @@ public class Cell {
                 setCss = "-fx-background-color: #000000, #ffffff; -fx-background-insets: 0,";
             }
         }
+        // Set the borders
         for  (int i : this.getCurrentBorders()) {
             setCss += (" " + i);
         }
@@ -203,4 +205,20 @@ public class Cell {
     public void setCorrect (boolean b) {
         this.correct = b;
     };
+
+    public void setFontSize (int newSize) {
+        if (newSize == 0) {
+            // Smallest font size
+            this.display.setStyle(" -fx-font: 14 arial; -fx-font-weight: bold;");
+            this.cageValue.setStyle(" -fx-font: 11 arial;");
+        } else if (newSize == 1){
+            // Medium font size
+            this.display.setStyle(" -fx-font: 17 arial; -fx-font-weight: bold;");
+            this.cageValue.setStyle(" -fx-font: 12 arial;");
+        } else if (newSize == 2){
+            // Large font size
+            this.display.setStyle(" -fx-font: 20 arial; -fx-font-weight: bold;");
+            this.cageValue.setStyle(" -fx-font: 13 arial;");
+        }
+    }
 }
