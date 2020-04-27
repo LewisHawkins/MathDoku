@@ -162,8 +162,7 @@ public class Cage {
             cluster.add(copy.get(0));
             copy.remove(0);
         } else {
-            System.out.println("CAGE HAS 0 CELLS ERROR.");
-            return false; // Return false as an error has occured if a cage with 0
+            return false; // Return false as an error has occured if a cage has 0 cells
         }
         // Loop through the cells, add to 'cluster' if they neighbour any cells in the cluster
         // Keep looping until either cells can't be added or no cells are added

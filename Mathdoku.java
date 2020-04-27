@@ -49,23 +49,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-/*
-TO DO LIST:
-    - VITAL:
-    - Add alert popups for each of the error cases failing to load alerting the user why their attempt to play failed, and also when they have won in addition to the game going green
-    - Remove the commented code from the files, and check all comments and unnecessary function
-
-    - NICE TO DO:
-    - Make the whole window have a minimum size, so that it cannot be made smaller than the buttons/puzzle
-    - Ensure checkGameWin is called after every possible cell interaction (with undo, redo and stuff)
-    - Big null error when pressing on the board without a game loaded
-    - Make the 'load game from text' popup look nicer
-
-    - IF MUCH SPARE TIME:
-    - CheckGameWin should be rewritten/restructured with the if/else? avoid code duplication?
-    - Change the name of the member variables for the undo/redo stacks to be more consistent
- */
-
 public class Mathdoku extends Application {
     // The area where the user plays the game
     private GridPane puzzlePane;
@@ -98,17 +81,13 @@ public class Mathdoku extends Application {
         HBox puzzleContainer = new HBox(5);
         GridPane puzzle = new GridPane();
         this.puzzlePane = puzzle;
-        puzzle.setStyle("-fx-background-color: #999999; -fx-padding: 60;");
+        puzzle.setStyle("-fx-background-color: #999999; -fx-padding: 30; -fx-vgap: 1; -fx-hgap: 1");
         puzzleContainer.setStyle("-fx-background-color: #FF0000;");
-        //puzzle.setStyle("-fx-background-color: #999999;");
-        //puzzle.setStyle("-fx-border-style: solid; -fx-border-width: 5px; -fx-border-color: black; -fx-background-color: #0000ff; -fx-background-fill: #0000ff; -fx-padding: 5;");
-        //puzzle.setStyle("-fx-background-color: #999999; -fx-vgap: 1; -fx-hgap: 1 ;");// -fx-padding: 4;"); //padding goes around the whole grid, h/vgaps are inbetween cells
 
         HBox menuContainer = new HBox(5);
         VBox menu = new VBox(5);
         menu.setStyle("-fx-background-color: #444444; -fx-padding: 30;");
 
-        // Menu stuff
         // The menu contains buttons for the user to control the game
         Button undo = new Button("Undo");
         Button redo = new Button("Redo");
@@ -129,6 +108,8 @@ public class Mathdoku extends Application {
         Button key9 = new Button("9");
         Button keyC = new Button("C");
         // There are three buttons for the font size
+        Label fontLabel = new Label("Font Size:");
+        fontLabel.setStyle("-fx-background-color: #FFFFFF; -fx-padding: 5;");
         HBox fontSize = new HBox(10);
         fontSize.setStyle("-fx-background-color: #FFFFFF;  -fx-padding: 10;");
         RadioButton smallFont = new RadioButton("Small");
@@ -251,11 +232,11 @@ public class Mathdoku extends Application {
                             createGrid(selectedFileContents, puzzlePane);
                         }
                     } catch (FileNotFoundException e) {
-                        e.printStackTrace();
                         System.out.println("There was an error!");
+                        e.printStackTrace();
                     } catch (IOException e) {
-                        e.printStackTrace();
                         System.out.println("There was an error!");
+                        e.printStackTrace();
                     }
                 }
             }
@@ -280,7 +261,7 @@ public class Mathdoku extends Application {
                             enteredTextLinesArray.add(line);
                         }
                         // Use the contents to create the game for the user
-                        // returns 0 if the number was wrong
+                        // 0 is returned if the number was wrong
                         int newGameSize = checkCellData(enteredTextLinesArray);
                         if (newGameSize != 0) {
                             setNewGameData(newGameSize);
@@ -437,7 +418,7 @@ public class Mathdoku extends Application {
 
         // Add all the buttons to the menu section of the window
         keypad.setAlignment(Pos.CENTER);
-        menu.getChildren().addAll(undo, redo, clear, loadFile, loadText, showMistakes, keypad, fontSize);
+        menu.getChildren().addAll(undo, redo, clear, loadFile, loadText, showMistakes, keypad, fontLabel, fontSize);
 
         // Edit the 2 large sections
         puzzleContainer.getChildren().add(puzzle);
@@ -450,18 +431,9 @@ public class Mathdoku extends Application {
         master.getChildren().addAll(puzzleContainer, menuContainer);
         master.setHgrow(puzzleContainer, Priority.ALWAYS);
 
-        // set min size
-        //puzzle.setMinWidth(Control.USE_PREF_SIZE + 120);
-        //puzzle.setMinHeight(Control.USE_PREF_SIZE + 120);
-        stage.setMinWidth(1000);
-        stage.setMinHeight(800);
-        /*
-        stage.setMaxSize(300)
-        puzzle.setMinWidth(Control.USE_PREF_SIZE);
-        menuContainer.setMinWidth(Control.USE_PREF_SIZE);
-        puzzle.setMinHeight(Control.USE_PREF_SIZE);
-        menuContainer.setMinHeight(Control.USE_PREF_SIZE);
-         */
+        // Set the minimum size of the window
+        stage.setMinWidth(850);
+        stage.setMinHeight(600);
 
         // Create a scene from the master pane
         Scene scene = new Scene(master);
@@ -505,7 +477,6 @@ public class Mathdoku extends Application {
         UndoHandler u = new UndoHandler(actionStack);
         RedoHandler r = new RedoHandler(redoStack);
 
-        //scene.getStylesheets().add(getClass().getResource("app.css").toExternalForm());
         stage.setScene(scene);
         stage.show();
     }
@@ -540,53 +511,20 @@ public class Mathdoku extends Application {
         }
         getMostRecentSelected();
     }
-    /*
-    void createGrid (int size, GridPane p)  {
-        // Create the cells for the grid
-        for (int i = 0; i < size; i++) {
-            Cell[] newRow = new Cell[this.size];
-            for (int j = 0; j < size; j++) {
-                // Create the square of cells
-                Cell c = new Cell(j, i);
-                p.add(c.getBox(), j, i);
-                newRow[j] = c;
-            }
-            this.cells[i] = newRow;
-        }
-        // Create the cages for the grid
-        try {
-            ArrayList<Cage> cages = this.getCagesFromFile("5x5.txt");
-            if (cages != null) {
-                Iterator<Cage> cageIter = cages.iterator();
-                while (cageIter.hasNext()) {
-                    Cage next = cageIter.next();
-                    next.formatCage();
-                }
-                this.cages = cages;
-            } else {
-                // Do something error based here
-                Label error = new Label ("Error");
-                error.setStyle("-fx-background-color: #ff0000");
-                //error.setTextFill("#ff0000");
-                //p.setRowIndex(error, 2);
-                //p.setColumnIndex(error, 3);
-                p.add(error, 0, 0);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-     */
 
     int checkCellData (ArrayList<String> cellInfo) {
-        // The first check should ensure that only valid characters are present (operators, numbers, space, comma, newline)
+        // The first check should ensure that the file contains only valid characters
         for (String line : cellInfo) {
             for (char c : line.toCharArray()) {
                 // Each character should be in the below string, or it is invalid
                 if ("0 1 2 3 4 5 6 7 8 9 + - x ,  ".contains(String.valueOf(c)) == false) {
                     if ((int) c != 247) {
                         if ((int) c != 32) {
-                            System.out.println("Input contains invalid character!");
+                            // If an incorrect character is detected alert the user
+                            Alert alert = new Alert(AlertType.WARNING);
+                            alert.setTitle("Load Game Error");
+                            alert.setHeaderText("An incorrect character was detected.");
+                            alert.show();
                             return 0;
                         }
                     }
@@ -610,8 +548,11 @@ public class Mathdoku extends Application {
         // If correct the biggest cell number should be a square number
         int gridSize = (int) Math.sqrt(largestNumber);
         if (Math.pow(gridSize, 2) != fileCellNumbers.size()) {
-            // 0 is used as a value to indicate that there has been an error
-            System.out.println("Number of cells is not a square!");
+            // An incorrect number of cells was counted
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle("Load Game Error");
+            alert.setHeaderText("An incorrect number of cells was detected.");
+            alert.show();
             return 0;
         }
 
@@ -620,7 +561,11 @@ public class Mathdoku extends Application {
         for (Integer i : fileCellNumbers) {
             // Add cell numbers to a new list until either all numbers are added or there is a duplicate
             if (duplicateChecker.contains(i)) {
-                System.out.println("There is a double in the cells!");
+                // If an incorrect character is detected alert the user
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Load Game Error");
+                alert.setHeaderText("Cell duplication detected.");
+                alert.show();
                 return 0;
             } else {
                 duplicateChecker.add(i);
@@ -631,7 +576,11 @@ public class Mathdoku extends Application {
         for (int i = 0; i < fileCellNumbers.size() - 1; i++) {
             // Check that the difference between each of the cell numbers is 1
             if (fileCellNumbers.get(i+1) - fileCellNumbers.get(i) != 1) {
-                System.out.println("Inconsistent cell numbers error");
+                // If an incorrect character is detected alert the user
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Load Game Error");
+                alert.setHeaderText("Missing cell number detected.");
+                alert.show();
                 return 0;
             }
         }
@@ -697,93 +646,6 @@ public class Mathdoku extends Application {
         }
         return allCages;
     }
-    /*
-    public ArrayList<Cage> getCagesFromFile (String filename) throws FileNotFoundException, IOException {
-        try {
-            // Use the contents of a file to make the cages for the puzzle
-            ArrayList<Cage> allCages = new ArrayList<Cage>();
-            // Get input from file
-            File gridFile = new File(filename);
-            //FileReader fr = new FileReader(gridFile);
-            FileInputStream fis = new FileInputStream(filename);
-            InputStreamReader isr = new InputStreamReader(fis,"UTF-8");
-            BufferedReader br = new BufferedReader(isr);
-            String line;
-            // For error correction, the sum of all the cell numbers should equal to (1/2 * n * n+1) where n = total cells
-            int totalCells = this.size*this.size;
-            int errorSum = (totalCells * (totalCells+1))/2;
-            while ((line = br.readLine()) != null) {
-                // Each line of the file represents a new cage, with the target info and cells split by the space
-                String[] lineContents = line.split(" ");
-                // If the line does not have an operator (+, x...) before the space the cage has only one cell
-                if ("0 1 2 3 4 5 6 7 8 9".contains(String.valueOf(lineContents[0].charAt(lineContents[0].length() - 1)))) {
-                    // The start of the string has the number for the target value, and the operation
-                    // Get the target value for the cage
-                    String targetStr = lineContents[0];
-                    int targetInt = Integer.parseInt(targetStr);
-                    char op = ' ';
-                    // Get the cell
-                    ArrayList<Cell> cageCells = new ArrayList<Cell>();
-                    int cellNo = Integer.parseInt(lineContents[1]);
-                    int cellRow = this.getRowForCellNo(cellNo, this.size);
-                    int cellCol = this.getColForCellNo(cellNo, this.size);
-                    Cell cellInCage = this.cells[cellRow][cellCol];
-                    cageCells.add(cellInCage);
-                    // Create the cage object
-                    Cage newCage = new Cage(cageCells, " ", targetInt);
-                    // Remove from the error
-                    errorSum -= cellNo;
-                    //
-                    allCages.add(newCage);
-                } else {
-                    // The operation is the last character before the space
-                    char op = lineContents[0].charAt(lineContents[0].length() - 1);
-                    // The rest of the start of the string is the target number for that cage
-                    String targetStr = lineContents[0].substring(0, lineContents[0].length() - 1);
-                    int targetInt = Integer.parseInt(targetStr);
-
-                    // The end of the string has the cell number for that cage seperated by commas
-                    String[] cellNumbers = lineContents[1].split(",");
-                    ArrayList<Cell> cageCells = new ArrayList<Cell>();
-                    for (String i : cellNumbers) {
-                        // For each cell number create a new cell and put cells in the cages
-                        int cellNo = Integer.parseInt(i);
-                        int cellRow = this.getRowForCellNo(cellNo, this.size);
-                        int cellCol = this.getColForCellNo(cellNo, this.size);
-                        Cell cellInCage = this.cells[cellRow][cellCol];
-                        cageCells.add(cellInCage);
-                        // Remove from the error
-                        errorSum -= cellNo;
-                    }
-                    Cage newCage = new Cage(cageCells, String.valueOf(op), targetInt);
-                    // Test that the cage is valid
-                    if (newCage.areCellsAdjacent()) {
-                        allCages.add(newCage);
-                    } else {
-
-                        THIS NEEDS SOME MORE ERROR HANDLING ---> CHECK FAQ'S ABOUT WHAT TO DO
-                        IF THE FILE DECIDES TO SHIT ITSELF WHILE LOADING
-
-                        System.out.println("Cage failed to load.");
-                    }
-                }
-            }
-            // After subtracting all of the cell numbers, the errorSum integer will be equal to 0 if each of the cell
-            // numbers from 1 to gridSize^2 appears each appears once and only once
-            if (errorSum == 0) {
-                return allCages;
-            } else {
-                return null;
-            }
-
-        } catch (FileNotFoundException e) {
-            System.out.println("That file could not be found!");
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-     */
 
     ArrayList<String> getCagesFromFile (String filename) throws FileNotFoundException, IOException {
         // Get the contents of the file and return it in an ArrayList of strings
@@ -804,28 +666,7 @@ public class Mathdoku extends Application {
             return null;
         }
     }
-    /*
-    void ArrayList<String> getCagesFromText (?) {
-        // If the user enters the text manually, use this method to get the array passed to create grid
-        return ;
-    }
-     */
 
-    // Puzzle
-    /*
-    public void clearGrid () {
-        for (Cell[] cr : this.cells) {
-            for (Cell c : cr) {
-                c.setCageValue("");
-                // This should either manually set the actual cage value
-                // or setCageValue will change the value in the cell class
-            }
-        }
-    }
-
-     */
-
-    // This should return an arraylist, as the size is not fixed
     public ArrayList<Cell> getMistakes () {
         // Check the 3 puzzle constraints
         ArrayList<Cell> allMistakes = new ArrayList<Cell>();
@@ -865,7 +706,6 @@ public class Mathdoku extends Application {
                 }
             }
         }
-        //System.out.println("allMistakes has this many cells: " + allMistakes.size());
         return allMistakes;
     }
 
@@ -908,7 +748,7 @@ public class Mathdoku extends Application {
             }
             // If the boolean now has the value false there was a cell that wasn't filled
             if (everyCellFilled) {
-                // The user has won so highlight all the cells green and popup a message
+                // The user has won
                 for (Cell[] cr : this.cells) {
                     for (Cell c : cr) {
                         c.setShowingMistakes(true);
@@ -916,6 +756,11 @@ public class Mathdoku extends Application {
                         c.dispCage();
                     }
                 }
+                Alert alert = new Alert(AlertType.WARNING);
+                alert.setTitle("Congratulations!");
+                alert.setGraphic(null);
+                alert.setHeaderText("You solved the puzzle!");
+                alert.show();
             } else {
                 // Reset the board before colouring the incorrect cells red
                 for (Cell[] cr : this.cells) {
@@ -947,9 +792,8 @@ public class Mathdoku extends Application {
                     c.dispCage();
                 }
             } else {
-                // If not showing mistakes, it should still be checked that all cells should be turned off/reset
-                // this is so the cells return to how they were at the start when the show mistakes button has been turned off
-                // a lot of dupliction and recolouring, change the CSS in the method inside of the cell class to reflect this
+                // If not showing mistakes, it should still be checked that all cells should be turned off/reset so that
+                // the cells return to how they were at the start when the show mistakes button was been turned off
                 for (Cell[] cr : this.cells) {
                     for (Cell c : cr) {
                         c.setShowingMistakes(false);
@@ -960,8 +804,6 @@ public class Mathdoku extends Application {
         }
     }
 
-
-    // Interaction/Handling
     public int validateKeyPress (KeyCode keyCode) {
         int newNumber = 0;
         // 8 Case statements needed as the largest size that the board can be is 8 by 8
@@ -994,7 +836,7 @@ public class Mathdoku extends Application {
                 newNumber = 0;
                 break;
             default:
-                // If any invalid key is pressed the value 0 should be returned to indiciate this
+                // If any invalid key is pressed the value 10 should be returned to indiciate this
                 newNumber = 10;
         }
         // You can't enter a number into a cell if it is bigger than the grid size
@@ -1005,10 +847,7 @@ public class Mathdoku extends Application {
     }
 
     public void keypadNumberPress (int num) {
-        if (num > this.size) {
-            // An irrelevant number has been pressed, so don't do anything (pop up an alert?)
-            System.out.println("Too large pressed.");
-        } else {
+        if (num <= this.size) {
             Cell cellToChange = getMostRecentSelected();
             // Create a new Action object and add it to the stack
             Action update = new Action(cellToChange, cellToChange.getDisplay(), Integer.toString(num));
@@ -1044,15 +883,6 @@ public class Mathdoku extends Application {
             }
         }
         return this.selectedCell;
-    }
-
-    public void checkButtonDisability (Button b, Stack s) {
-        // Check the size of the stack of actions to know wether the undo button should be disabled or not
-        if (s.size() == 0) {
-            b.setDisable(true);
-        } else {
-            b.setDisable(false);
-        }
     }
 
     public void setFontSize (int size) {

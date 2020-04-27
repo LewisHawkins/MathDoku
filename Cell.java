@@ -53,7 +53,6 @@ public class Cell {
         this.display.setAlignment(Pos.CENTER);
         this.display.setPrefWidth(60);
         this.display.setStyle(" -fx-font: 14 arial; -fx-font-weight: bold;");
-        //this.display.setStyle("-fx-border-style: solid; -fx-border-color: #ffffff; -fx-font: 16 arial; -fx-font-weight: bold; -fx-text-box-border: transparent"); // -fx-border-width: 10px; WTFFF
 
         // Add the functionality to interact with the user
         this.selected = false;
@@ -83,13 +82,12 @@ public class Cell {
         String setCss;
         // Set the colour of the cell
         if (this.selected) {
-            //System.out.println("SET ME BLUE");
             setCss = "-fx-background-color: #000000, #29b6f6; -fx-background-insets: 0,";
         } else {
             // Only show mistakes on non-empty cells
             if (this.showingMistakes) {
                 if (this.correct) {
-                    // Set the cell green [not really necessary? --> The button just says show mistakes]
+                    // Set the cell green
                     setCss = "-fx-background-color: #000000, #00ff00; -fx-background-insets: 0,";
                 } else {
                     // Set the cell red
