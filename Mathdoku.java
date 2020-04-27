@@ -50,20 +50,20 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /*
-LIST OF THINGS TO CHANGE:
-    . VITAL:
-    - Making winning actually do something
-    - Fix the default value of selected cell in the top left corner, and entering buttons before even selecting one
-    - Add error correction to allow only valid cells, add an alert popup for each of the error cases failing to load
+TO DO LIST:
+    - VITAL:
+    - Add alert popups for each of the error cases failing to load alerting the user why their attempt to play failed, and also when they have won in addition to the game going green
+    - Remove the commented code from the files, and check all comments and unnecessary function
 
     - NICE TO DO:
     - Make the whole window have a minimum size, so that it cannot be made smaller than the buttons/puzzle
-    - Change the name of the member variables for the undo/redo stacks to be more consistent
-    - Ensure checkWin is being called every time the user selects a new cell, so that the user can't de-red each of the X cells by colouring them all [blue then white] by clicking on them all
-    - THE ABOVE LIVE/BULLETPOINT IS TRUE FOR UNDOING ACTIONS AS WELL. ENTER NUMEBER --> HIGHLIGHT IT RED/WRONG --> UNDO == empty cell still red
-    - CheckGameWin should be rewritten/restructured with the if/else? avoid code duplication?
+    - Ensure checkGameWin is called after every possible cell interaction (with undo, redo and stuff)
     - Big null error when pressing on the board without a game loaded
     - Make the 'load game from text' popup look nicer
+
+    - IF MUCH SPARE TIME:
+    - CheckGameWin should be rewritten/restructured with the if/else? avoid code duplication?
+    - Change the name of the member variables for the undo/redo stacks to be more consistent
  */
 
 public class Mathdoku extends Application {
@@ -281,9 +281,7 @@ public class Mathdoku extends Application {
                         }
                         // Use the contents to create the game for the user
                         // returns 0 if the number was wrong
-                        //System.out.println("Test 1");
                         int newGameSize = checkCellData(enteredTextLinesArray);
-                        //System.out.println("Test 2");
                         if (newGameSize != 0) {
                             setNewGameData(newGameSize);
                             GridPane puzzlePane = getPuzzlePane();
@@ -540,6 +538,7 @@ public class Mathdoku extends Application {
             // Alert the user that there was an error loading the file
             System.out.println("There was an error loading that file!");
         }
+        getMostRecentSelected();
     }
     /*
     void createGrid (int size, GridPane p)  {
@@ -587,7 +586,7 @@ public class Mathdoku extends Application {
                 if ("0 1 2 3 4 5 6 7 8 9 + - x ,  ".contains(String.valueOf(c)) == false) {
                     if ((int) c != 247) {
                         if ((int) c != 32) {
-                            System.out.println("Input contains invalid character!);
+                            System.out.println("Input contains invalid character!");
                             return 0;
                         }
                     }
@@ -690,7 +689,7 @@ public class Mathdoku extends Application {
                 } else {
                         /*
                         THIS NEEDS SOME MORE ERROR HANDLING ---> CHECK FAQ'S ABOUT WHAT TO DO
-                        IF THE FILE DECIDES TO SHIT ITSELF WHILE LOADING
+                        IF THE FILE BREAKS ITSELF WHILE LOADING
                          */
                     System.out.println("Cage failed to load.");
                 }
@@ -909,8 +908,14 @@ public class Mathdoku extends Application {
             }
             // If the boolean now has the value false there was a cell that wasn't filled
             if (everyCellFilled) {
-                System.out.println("A winning move!");
-                // The user has won!
+                // The user has won so highlight all the cells green and popup a message
+                for (Cell[] cr : this.cells) {
+                    for (Cell c : cr) {
+                        c.setShowingMistakes(true);
+                        c.setCorrect(true);
+                        c.dispCage();
+                    }
+                }
             } else {
                 // Reset the board before colouring the incorrect cells red
                 for (Cell[] cr : this.cells) {
@@ -1021,6 +1026,8 @@ public class Mathdoku extends Application {
         if (this.selectedCell == null) {
             // When first loading select the top left cell by default
             this.selectedCell = this.cells[0][0];
+            this.selectedCell.setSelected(true);
+            this.selectedCell.dispCage();
         }
         for (Cell[] cr : this.cells) {
             for (Cell c : cr) {
@@ -1030,6 +1037,7 @@ public class Mathdoku extends Application {
                         this.selectedCell.setSelected(false);
                         this.selectedCell.dispCage();
                         this.selectedCell = c;
+                        this.selectedCell.setSelected(true);
                         this.selectedCell.dispCage();
                     }
                 }
@@ -1072,7 +1080,6 @@ public class Mathdoku extends Application {
     // Setters
     void setNewGameData (int gameSize) {
         this.size = gameSize;
-        System.out.println(gameSize);
         this.cells = new Cell[gameSize][gameSize];
     }
 
